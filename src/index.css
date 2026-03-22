@@ -1,12 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Alfa+Slab+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Audiowide&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Alfa+Slab+One&display=swap');
 @import "./styles/ios-close.css";
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  background: linear-gradient(135deg, #064e3b, #065f46, #047857);
+  /* Slate Navy Design Tokens */
+  --bg-base: #22212d;
+  --bg-section: #2a2836;
+  --bg-card: #312e40;
+  --bg-card-high: #3d3a4d;
+  --text-primary: #f0f0f4;
+  --text-muted: #a7a6b4;
+  --text-subtle: #797886;
+  --accent-indigo: #6366f1;
+  --outline: rgba(255, 255, 255, 0.08);
+
+  background: var(--bg-base);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,9 +32,7 @@
 html,
 body,
 #root {
-  background-color: #0f172a;
-  /* same as your dark gradient */
-
+  background-color: var(--bg-base);
 }
 
 html {
@@ -41,6 +50,7 @@ body {
   0% {
     transform: translateX(-100%) rotate(25deg);
   }
+
   100% {
     transform: translateX(200%) rotate(25deg);
   }
@@ -170,26 +180,26 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(34, 197, 94, 0.1);
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #22c55e, #10b981);
+  background: #3a3939;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #16a34a, #059669);
+  background: #4a4949;
 }
 
 /* Selection color */
 ::selection {
-  background: rgba(34, 197, 94, 0.3);
+  background: rgba(99, 102, 241, 0.3);
   color: white;
 }
 
 ::-moz-selection {
-  background: rgba(34, 197, 94, 0.3);
+  background: rgba(99, 102, 241, 0.3);
   color: white;
 }
 
@@ -468,6 +478,7 @@ body {
     opacity: 0;
     transform: translateY(80px) scale(0.88);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -490,10 +501,12 @@ body {
     opacity: 0;
     transform: translateY(40px) scale(0.9);
   }
+
   60% {
     opacity: 1;
     transform: translateY(0) scale(1.03);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -517,10 +530,12 @@ body {
     opacity: 0;
     transform: scale(1.12);
   }
+
   70% {
     opacity: 1;
     transform: scale(1.01);
   }
+
   100% {
     opacity: 1;
     transform: scale(1.0);
@@ -563,9 +578,11 @@ body {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
   }
+
   50% {
     transform: translate3d(10px, -10px, 0) scale(1.04);
   }
+
   100% {
     transform: translate3d(-8px, 12px, 0) scale(1.02);
   }
@@ -601,6 +618,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;

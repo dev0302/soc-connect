@@ -1,4 +1,3 @@
-import GFGBentoGrid from "../components/GFGBentoGrid";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -6,530 +5,403 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Footer from "../components/common/Footer";
-import ImageGrid from "../components/ImageGrid";
 import UpcomingEventSection from "../components/UpcomingEventSection";
 import Lenis from "lenis";
 import { useFeatureFlags } from "../context/FeatureFlags.jsx";
 
-
 gsap.registerPlugin(ScrollTrigger);
 
+/* ─── Design Tokens (Slate Navy) ─────────────────────────────────────── */
+const T = {
+  bg0: "#22212d",
+  bg1: "#2a2836",
+  bg2: "#312e40",
+  bg3: "#3d3a4d",
+  card: "#343045",
+  border: "rgba(255,255,255,0.08)",
+  borderHover: "rgba(255,255,255,0.16)",
+  textPrimary: "#f0f0f4",
+  textMuted: "#a7a6b4",
+  textSubtle: "#797886",
+};
+
+/* ─── Feature cards data ─────────────────────────────────────────────────── */
+const FEATURES = [
+  {
+    icon: "👥",
+    title: "Member Management",
+    desc: "Onboard, manage, and track every member across departments — with role-based access, profiles, and social links.",
+    gradient: "from-indigo-500/10 to-violet-500/10",
+    border: "rgba(99,102,241,0.2)",
+  },
+  {
+    icon: "📅",
+    title: "Event Lifecycle",
+    desc: "Create, publish, and archive events with full gallery, speaker, and agenda support — plus smart scheduled cleanup.",
+    gradient: "from-sky-500/10 to-cyan-500/10",
+    border: "rgba(14,165,233,0.2)",
+  },
+  {
+    icon: "🏢",
+    title: "Department Rosters",
+    desc: "Each department gets its own roster. Bulk import via Excel, photo uploads, and shareable invite links.",
+    gradient: "from-violet-500/10 to-purple-500/10",
+    border: "rgba(139,92,246,0.2)",
+  },
+  {
+    icon: "🔗",
+    title: "Magic Links",
+    desc: "Share a link — anyone can submit events or join teams without needing an account. Secure, token-based, expiring.",
+    gradient: "from-amber-500/10 to-orange-500/10",
+    border: "rgba(245,158,11,0.2)",
+  },
+  {
+    icon: "🏆",
+    title: "Hackathon Scoring",
+    desc: "Run competitions with per-judge scoring, real-time leaderboards, and configurable result declarations.",
+    gradient: "from-emerald-500/10 to-teal-500/10",
+    border: "rgba(16,185,129,0.2)",
+  },
+  {
+    icon: "📊",
+    title: "Activity Audit Logs",
+    desc: "Every action is tracked. Full transparency with per-user logs, action categories, and searchable history.",
+    gradient: "from-rose-500/10 to-pink-500/10",
+    border: "rgba(244,63,94,0.2)",
+  },
+];
+
+/* ─── How it works steps ─────────────────────────────────────────────────── */
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    title: "Register Your Society",
+    desc: "Sign up and configure your society's profile, departments, and access permissions in minutes.",
+  },
+  {
+    step: "02",
+    title: "Invite Your Team",
+    desc: "Generate invite links per department. Members self-register — no manual data entry needed.",
+  },
+  {
+    step: "03",
+    title: "Run Everything in One Place",
+    desc: "Post events, manage rosters, publish results, and track activity — all from one unified dashboard.",
+  },
+];
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 function Home() {
   const { user } = useAuth();
   const { leaderboardEnabled } = useFeatureFlags();
-
-  useEffect(() => {
-  const lenis = new Lenis({ lerp: 0.05, smoothWheel: true });
-
-  lenis.on("scroll", ScrollTrigger.update);
-
-  function raf(time) {
-    lenis.raf(time);
-    requestAnimationFrame(raf);
-  }
-  requestAnimationFrame(raf);
-
-  ScrollTrigger.refresh();
-
-  return () => {
-    lenis.destroy();
-  };
-}, []);
-
-  
   const navigate = useNavigate();
+
+  /* refs for GSAP */
   const titleRef = useRef();
   const descRef = useRef();
   const btnRef = useRef();
-  const teamTitleRef = useRef();
-  const teamCardsRef = useRef();
+  const featuresRef = useRef();
+  const howRef = useRef();
 
-  // State for the counters
   const [memberCount, setMemberCount] = useState(0);
   const [eventCount, setEventCount] = useState(0);
-  const [workshopCount, setWorkshopCount] = useState(0);
+  const [societyCount, setSocietyCount] = useState(0);
 
-  // GSAP animations
+  /* Lenis smooth scroll */
+  useEffect(() => {
+    const lenis = new Lenis({ lerp: 0.05, smoothWheel: true });
+    lenis.on("scroll", ScrollTrigger.update);
+    const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+    ScrollTrigger.refresh();
+    return () => lenis.destroy();
+  }, []);
+
+  /* GSAP */
   useGSAP(() => {
-    // Hero entrance animations
-    gsap.from(titleRef.current, {
-      y: 50,
-      opacity: 0,
-      duration: 1.2,
-      ease: "power2.out",
-    });
-    gsap.from(descRef.current, {
-      y: 40,
-      opacity: 0,
-      duration: 1,
-      ease: "power2.out",
-      delay: 0.3,
-    });
-    gsap.from(btnRef.current, {
-      y: 30,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out",
-      delay: 0.6,
-    });
+    gsap.from(titleRef.current, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out" });
+    gsap.from(descRef.current, { y: 40, opacity: 0, duration: 1, ease: "power2.out", delay: 0.3 });
+    gsap.from(btnRef.current, { y: 30, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.6 });
 
-    // Number counting animation
-    const counters = { members: 0, events: 0, workshops: 0 };
+    const counters = { members: 0, events: 0, societies: 0 };
     gsap.to(counters, {
-      duration: 4,
-      ease: "power2.out",
-      delay: 0.8,
-      members: 100,
-      events: 10,
-      workshops: 10,
+      duration: 3.5, ease: "power2.out", delay: 0.8,
+      members: 500, events: 80, societies: 30,
       onUpdate: () => {
         setMemberCount(Math.ceil(counters.members));
         setEventCount(Math.ceil(counters.events));
-        setWorkshopCount(Math.ceil(counters.workshops));
+        setSocietyCount(Math.ceil(counters.societies));
       },
     });
 
-    // Team section animations
-    gsap.from(teamTitleRef.current, {
-      y: 50,
-      opacity: 0,
-      duration: 1,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: teamTitleRef.current,
-        start: "top 80%",
-        toggleActions: "play none none reverse"
-      }
+    gsap.from(featuresRef.current?.children, {
+      y: 60, opacity: 0, duration: 0.7, ease: "power2.out", stagger: 0.1,
+      scrollTrigger: { trigger: featuresRef.current, start: "top 80%", toggleActions: "play none none reverse" },
     });
 
-    gsap.from(teamCardsRef.current?.children, {
-      y: 80,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out",
-      stagger: 0.2,
-      scrollTrigger: {
-        trigger: teamCardsRef.current,
-        start: "top 85%",
-        toggleActions: "play none none reverse"
-      }
+    gsap.from(howRef.current?.children, {
+      y: 50, opacity: 0, duration: 0.8, ease: "power2.out", stagger: 0.15,
+      scrollTrigger: { trigger: howRef.current, start: "top 80%", toggleActions: "play none none reverse" },
     });
   }, []);
 
   return (
-    <div className="relative overflow-x-hidden ">
-      {/* Hero Section with Background */}
-      <div className="relative min-h-screen">
-        {/* Background */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/landingpage_img2.jpg')`,
-            filter: "blur(1px)", // stronger blur if you like
-          }}
-        >
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/50"></div>
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 opacity-5">
-            <div
-              className="absolute inset-0"
+    <div className="relative overflow-x-hidden" style={{ background: T.bg0 }}>
+
+      {/* ══ 1. HERO ══════════════════════════════════════════════════════════ */}
+      <section
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 pb-28 overflow-hidden"
+        style={{ background: T.bg0 }}
+      >
+        {/* Indigo radial glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(99,102,241,0.13) 0%, transparent 68%)",
+        }} />
+        {/* Dot grid */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px",
+        }} />
+
+        {/* Badge */}
+        <div className="relative z-10 mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase"
+          style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" style={{ boxShadow: "0 0 6px rgba(99,102,241,0.9)" }} />
+          The all-in-one society management platform
+        </div>
+
+        {/* Heading */}
+        <h1 ref={titleRef} className="relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4" style={{ letterSpacing: "-0.025em" }}>
+          <span className="text-white block">One Platform for</span>
+          <span className="block" style={{
+            background: "linear-gradient(135deg, #ffffff 20%, #a5b4fc 55%, #c084fc 85%)",
+            backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          }}>Every Society</span>
+        </h1>
+
+        {/* Subheading */}
+        <p className="relative z-10 text-xl sm:text-2xl font-semibold mb-6" style={{
+          background: "linear-gradient(90deg, #a5b4fc, #e879f9)",
+          backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          letterSpacing: "-0.01em",
+        }}>Manage. Connect. Grow.</p>
+
+        {/* Subtext */}
+        <p ref={descRef} className="relative z-10 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10" style={{ color: T.textSubtle }}>
+          SocConnect is a complete ecosystem for college societies — manage members, departments,
+          events, teams, and recruitment all from one unified platform.
+        </p>
+
+        {/* CTAs */}
+        <div ref={btnRef} className="relative z-10 flex flex-col sm:flex-row items-center gap-4 mb-16">
+          <NavLink to="/signup">
+            <button className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
               style={{
-                backgroundImage: `radial-gradient(circle at 25% 25%, #10b981 1px, transparent 1px)`,
-                backgroundSize: "60px 60px",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 pt-20 pb-20 text-center">
-          {/* Title */}
-          <h1
-            ref={titleRef}
-            className="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight pt-8 leading-tight md:leading-tight pb-1"
-            style={{
-              background: "linear-gradient(135deg, #22c55e, #10b981, #059669)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Empowering Students for
-            <br />
-            a Brighter Future
-          </h1>
-
-          {/* Description */}
-          <p
-            ref={descRef}
-            id="home-desc"
-            className="text-lg md:text-xl text-green-100 max-w-3xl leading-relaxed font-light font-nunito"
-          >
-            Join GFG BVCOEE - learn, teach, and collaborate through workshops, events, project showcases and mentorship.
-          </p>
-
-          
-
-          {/* CTAs */}
-          <div
-            ref={btnRef}
-            className="flex flex-col sm:flex-row gap-6 mt-12 font-nunito items-center"
-          >
-            <NavLink to="/results">
-              <button
-                id="btn-join"
-                className=" px-3 py-3 bg-gradient-to-r 
-             from-green-500/50 via-emerald-400/50 to-teal-500/50
-             text-white font-bold rounded-full transition-all duration-500 ease-in-out
-             transform hover:-translate-y-2 hover:scale-105
-             shadow-[0_0_20px_rgba(16,185,129,0.6)]
-            
-             border-2 border-white/20
-             overflow-hidden group"
-              >
-                {/* Shining sweep overlay */}
-                {/* <span
-                  className="absolute top-0 left-0 w-1/3 h-full bg-white/30 blur-md transform -skew-x-12 animate-shine hover:shadow-[0_0_35px_rgba(16,185,129,0.8)]"
-                ></span> */}
-
-                {/* Text + icon */}
-                <span className="relative  flex items-center justify-center">
-                  <span className="ml-3 font-nunito text-center">2025 Execoms Result out</span>
-                  <svg
-                    className="w-5 h-5 group-hover:translate-x-[2px] transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    {/* <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    ></path> */}
-                  </svg>
-                </span>
-              </button>
-            </NavLink>
-
-
-            <button
-              id="btn-about"
-              onClick={() => navigate("/about")}
-              className="px-8 py-3 bg-transparent text-green-100 font-semibold rounded-full text-lg border-2 border-green-300/40 backdrop-blur-sm transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 hover:bg-green-400/20 hover:border-green-300"
-            >
-              About Us
+                background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
+                color: "#0a0a0a",
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 8px 32px rgba(255,255,255,0.12)",
+              }}>
+              Start for Free
             </button>
-            {leaderboardEnabled && (
-              <button
-                onClick={() => navigate('/leaderboard')}
-                className="px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-full hover:bg-white/15 transition-all"
-              >
-                View Leaderboard
-              </button>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div
-            id="stats-grid"
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 font-nunito"
-          >
-            <div className="bg-green-800/30 backdrop-blur-sm rounded-2xl p-6 border border-green-400/20 hover:bg-green-800/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-cyan-500/20 group">
-              <div
-                id="count-members"
-                className="text-3xl font-bold text-green-300 mb-2"
-              >
-                {memberCount}+
-              </div>
-              <div className="text-green-100">Active Members</div>
-            </div>
-            <div className="bg-green-800/30 backdrop-blur-sm rounded-2xl p-6 border border-green-400/20 hover:bg-green-800/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-cyan-500/20 group">
-              <div
-                id="count-events"
-                className="text-3xl font-bold text-emerald-300 mb-2"
-              >
-                {eventCount}+
-              </div>
-              <div className="text-green-100">Events Held</div>
-            </div>
-            <div className="bg-green-800/30 backdrop-blur-sm rounded-2xl p-6 border border-green-400/20 hover:bg-green-800/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-cyan-500/20 group">
-              <div
-                id="count-workshops"
-                className="text-3xl font-bold text-green-300 mb-2"
-              >
-                {workshopCount}+
-              </div>
-              <div className="text-green-100">Workshops Conducted</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <UpcomingEventSection variant="home" />
-
-      {/* Bento Grid Section */}
-      <div className="relative z-10">
-        {/* <GFGBentoGrid /> */}
-      </div>
-
-      {/* About Section */}
-      <section className="py-20 bg-gradient-to-br from-green-950 via-green-900 to-emerald-900 text-white text-center">
-        <div className="container mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 font-audiowide">
-            Who We{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-              Are
-            </span>
-          </h2>
-          <p className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light font-nunito mb-12 ">
-            GFG BVCOE is a community of tech enthusiasts dedicated to fostering
-            a culture of learning, innovation, and collaboration. We organize
-            workshops, hackathons, and speaker sessions to help students grow
-            their skills and connect with like-minded peers.
-          </p>
-          <button
-            onClick={() => navigate("/about")}
-            className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-full text-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/40"
-          >
-            Learn More About Us
+          </NavLink>
+          <button onClick={() => navigate("/about")}
+            className="px-8 py-3 rounded-full font-medium text-sm text-white/80 hover:text-white transition-all duration-200 hover:scale-[1.02]"
+            style={{ border: "1px solid rgba(255,255,255,0.18)" }}>
+            Learn More
           </button>
+          {leaderboardEnabled && (
+            <button onClick={() => navigate("/leaderboard")}
+              className="px-8 py-3 rounded-full font-medium text-sm text-white/60 hover:text-white transition-all duration-200"
+              style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+              Leaderboard
+            </button>
+          )}
+        </div>
+
+        {/* Stats Card */}
+        <div className="relative z-10 w-full max-w-2xl rounded-2xl p-px"
+          style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 50%, transparent 100%)" }}>
+          <div className="relative rounded-2xl px-8 py-7"
+            style={{ background: T.bg2, boxShadow: "0 4px 6px rgba(0,0,0,0.4), 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)" }}>
+            {/* Light-leak */}
+            <div className="absolute top-0 left-8 right-8 h-px"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)" }} />
+            <div className="grid grid-cols-3 gap-6 text-center">
+              {[
+                { val: `${societyCount}+`, label: "Societies" },
+                { val: `${memberCount}+`, label: "Members", bordered: true },
+                { val: `${eventCount}+`, label: "Events Run" },
+              ].map(({ val, label, bordered }) => (
+                <div key={label} className="flex flex-col items-center"
+                  style={bordered ? { borderLeft: `1px solid ${T.border}`, borderRight: `1px solid ${T.border}` } : {}}>
+                  <div className="font-bold text-3xl sm:text-4xl text-white mb-1" style={{ letterSpacing: "-0.03em" }}>{val}</div>
+                  <div className="text-xs font-medium uppercase tracking-widest" style={{ color: T.textSubtle }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 bg-[#161629] text-white relative overflow-hidden border-b-2 border-gray-600 border-opacity-40">
-        {/* Animated Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `radial-gradient(circle at 25% 25%, #10b981 1px, transparent 1px)`,
-              backgroundSize: "60px 60px",
-            }}
-          />
-        </div>
-        
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-green-500/10 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl animate-pulse delay-500"></div>
+      {/* ══ 2. UPCOMING EVENTS ═══════════════════════════════════════════════ */}
+      <UpcomingEventSection variant="home" />
 
-        <div className="container mx-auto px-6 relative z-10">
-          {/* Header */}
-          <div ref={teamTitleRef} className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Meet Our{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 animate-pulse">
-                Team
-              </span>
+      {/* ══ 3. FEATURES ══════════════════════════════════════════════════════ */}
+      <section className="py-28 px-6" style={{ background: T.bg1 }}>
+        <div className="max-w-6xl mx-auto">
+          {/* Section header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs uppercase tracking-widest mb-4"
+              style={{ border: `1px solid rgba(99,102,241,0.3)`, color: "#a5b4fc", background: "rgba(99,102,241,0.06)" }}>
+              Platform Features
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ letterSpacing: "-0.02em" }}>
+              Everything your society needs
             </h2>
-            <p className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light font-nunito mb-8">
-              We are a group of passionate students and faculty dedicated to
-              guiding our community. Our diverse team works together to create
-              impactful events and provide mentorship for all members.
+            <p className="text-base sm:text-lg max-w-2xl mx-auto" style={{ color: T.textSubtle }}>
+              Built specifically for the way college societies actually work — dynamic, fast-moving, and people-first.
             </p>
           </div>
 
-          {/* Team Preview Grid */}
-          <div ref={teamCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 max-w-6xl mx-auto">
-            {/* Chair Person - Featured */}
-            <div className="lg:col-span-1 md:col-span-2 group font-nunito">
-              <div className="relative bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-3xl p-8 border border-green-400/30 hover:border-green-400/60 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20 backdrop-blur-sm">
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                {/* Content */}
-                <div className="relative z-10 text-center">
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden border-4 border-green-400/50 shadow-lg group-hover:border-green-400 transition-colors duration-300">
-                    <img 
-                      src="/Toshika.webp" 
-                      alt="Toshika Goswami"
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-rounded text-2xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors duration-300">
-                    Toshika Goswami
-                  </h3>
-                  <p className="text-green-300 text-lg font-semibold mb-2">Chair Person</p>
-                  <p className="text-gray-300 text-sm mb-4">CSE • 4th Year</p>
-                  
-                  {/* Social Links */}
-                  <div className="flex justify-center gap-3">
-                    <a 
-                      href="mailto:toshikagoswami4@gmail.com"
-                      className="w-10 h-10 bg-green-500/80 rounded-full flex items-center justify-center hover:bg-green-400 hover:scale-110 transition-all duration-300"
-                      title="Email"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://www.linkedin.com/in/toshika-goswami-39791022a"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 bg-blue-600/80 rounded-full flex items-center justify-center hover:bg-blue-500 hover:scale-110 transition-all duration-300"
-                      title="LinkedIn"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.328v15.344C1 18.4 1.595 19 2.328 19h15.34c.734 0 1.332-.6 1.332-1.328V2.328C19 1.581 18.402 1 17.668 1z" />
-                      </svg>
-                    </a>
-                  </div>
-                </div>
+          {/* Feature grid */}
+          <div ref={featuresRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map(({ icon, title, desc, gradient, border }) => (
+              <div key={title}
+                className={`group relative rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${gradient}`}
+                style={{ border: `1px solid ${border}`, background: T.card }}>
+                {/* Light leak top */}
+                <div className="absolute top-0 left-6 right-6 h-px"
+                  style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
+                <div className="text-3xl mb-4">{icon}</div>
+                <h3 className="text-base font-semibold text-white mb-2">{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: T.textMuted }}>{desc}</p>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Vice Chair Person */}
-            <div className="group font-nunito">
-              <div className="relative bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-3xl p-6 border border-blue-400/30 hover:border-blue-400/60 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 backdrop-blur-sm">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="relative z-10 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-3 border-blue-400/50 shadow-lg group-hover:border-blue-400 transition-colors duration-300">
-                    <img 
-                      src="/Kartik.webp" 
-                      loading="lazy"
-                      alt="Kartik Bhattacharya"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-rounded text-xl font-bold text-white mb-1 group-hover:text-blue-300 transition-colors duration-300">
-                    Kartik Bhattacharya
-                  </h3>
-                  <p className="text-blue-300 font-semibold mb-1">Vice-Chairperson</p>
-                  <p className="text-gray-300 text-sm mb-3">CSE • 3rd Year</p>
-                  
-                  <div className="flex justify-center gap-2">
-                    <a 
-                      href="mailto:kartikbhattacharya10@gmail.com"
-                      className="w-8 h-8 bg-blue-500/80 rounded-full flex items-center justify-center hover:bg-blue-400 hover:scale-110 transition-all duration-300"
-                      title="Email"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://linkedin.com/in/kafiltafish21"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 bg-blue-600/80 rounded-full flex items-center justify-center hover:bg-blue-500 hover:scale-110 transition-all duration-300"
-                      title="LinkedIn"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.328v15.344C1 18.4 1.595 19 2.328 19h15.34c.734 0 1.332-.6 1.332-1.328V2.328C19 1.581 18.402 1 17.668 1z" />
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://www.instagram.com/_kafiltafish_21_/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 bg-pink-600/80 rounded-full flex items-center justify-center hover:bg-pink-500 hover:scale-110 transition-all duration-300"
-                      title="Instagram"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 2C6.686 2 6.343 2.014 5.514 2.072 4.69 2.13 4.188 2.333 3.77 2.551a2.5 2.5 0 0 0-.919.919C2.333 4.188 2.13 4.69 2.072 5.514 2.014 6.343 2 6.686 2 10s.014 3.657.072 4.486c.058.824.261 1.326.479 1.744a2.5 2.5 0 0 0 .919.919c.418.218.92.421 1.744.479.829.058 1.168.072 4.486.072s3.657-.014 4.486-.072c.824-.058 1.326-.261 1.744-.479a2.5 2.5 0 0 0 .919-.919c.218-.418.421-.92.479-1.744.058-.829.072-1.168.072-4.486s-.014-3.657-.072-4.486c-.058-.824-.261-1.326-.479-1.744a2.5 2.5 0 0 0-.919-.919c-.418-.218-.92-.421-1.744-.479C13.657 2.014 13.314 2 10 2zm0 1.5c3.136 0 3.389.007 4.61.045.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.919.11.281.24.705.275 1.485.038 1.22.045 1.475.045 4.61s-.007 3.389-.045 4.61c-.035.78-.166 1.204-.275 1.486a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.919.598-.28.11-.704.24-1.485.275-1.22.038-1.475.045-4.61.045s-3.389-.007-4.61-.045c-.78-.035-1.203-.166-1.485-.275a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.704-.275-1.485-.038-1.22-.045-1.475-.045-4.61s.007-3.389.045-4.61c.035-.78.166-1.203.275-1.485.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.281-.11.704-.24 1.485-.275C6.611 3.507 6.864 3.5 10 3.5z" clipRule="evenodd"/>
-                        <path d="M10 5.838a4.162 4.162 0 1 0 0 8.324 4.162 4.162 0 0 0 0-8.324zM10 12a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm4.208-7.208a.972.972 0 1 1-1.944 0 .972.972 0 0 1 1.944 0z"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </div>
+      {/* ══ 4. HOW IT WORKS ══════════════════════════════════════════════════ */}
+      <section className="py-28 px-6" style={{ background: T.bg0 }}>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs uppercase tracking-widest mb-4"
+              style={{ border: `1px solid rgba(255,255,255,0.1)`, color: T.textMuted }}>
+              How it works
             </div>
-
-            {/* Design Lead */}
-            <div className="group font-nunito">
-              <div className="relative bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-3xl p-6 border border-purple-400/30 hover:border-purple-400/60 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 backdrop-blur-sm">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="relative z-10 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-3 border-purple-400/50 shadow-lg group-hover:border-purple-400 transition-colors duration-300">
-                    <img 
-                      src="/Archita.webp" 
-                      alt="Archita"
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-rounded text-xl font-bold text-white mb-1 group-hover:text-purple-300 transition-colors duration-300">
-                    Archita
-                  </h3>
-                  <p className="text-purple-300 font-semibold mb-1">Design & Creative Lead</p>
-                  <p className="text-gray-300 text-sm mb-3">IT • 3rd Year</p>
-                  
-                  <div className="flex justify-center gap-2">
-                    <a 
-                      href="mailto:archita770@gmail.com"
-                      className="w-8 h-8 bg-purple-500/80 rounded-full flex items-center justify-center hover:bg-purple-400 hover:scale-110 transition-all duration-300"
-                      title="Email"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://www.linkedin.com/in/archita-337521376"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 bg-blue-600/80 rounded-full flex items-center justify-center hover:bg-blue-500 hover:scale-110 transition-all duration-300"
-                      title="LinkedIn"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.328v15.344C1 18.4 1.595 19 2.328 19h15.34c.734 0 1.332-.6 1.332-1.328V2.328C19 1.581 18.402 1 17.668 1z" />
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://www.instagram.com/archiitta.r?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 bg-pink-600/80 rounded-full flex items-center justify-center hover:bg-pink-500 hover:scale-110 transition-all duration-300"
-                      title="Instagram"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 2C6.686 2 6.343 2.014 5.514 2.072 4.69 2.13 4.188 2.333 3.77 2.551a2.5 2.5 0 0 0-.919.919C2.333 4.188 2.13 4.69 2.072 5.514 2.014 6.343 2 6.686 2 10s.014 3.657.072 4.486c.058.824.261 1.326.479 1.744a2.5 2.5 0 0 0 .919.919c.418.218.92.421 1.744.479.829.058 1.168.072 4.486.072s3.657-.014 4.486-.072c.824-.058 1.326-.261 1.744-.479a2.5 2.5 0 0 0 .919-.919c.218-.418.421-.92.479-1.744.058-.829.072-1.168.072-4.486s-.014-3.657-.072-4.486c-.058-.824-.261-1.326-.479-1.744a2.5 2.5 0 0 0-.919-.919c-.418-.218-.92-.421-1.744-.479C13.657 2.014 13.314 2 10 2zm0 1.5c3.136 0 3.389.007 4.61.045.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.919.11.281.24.705.275 1.485.038 1.22.045 1.475.045 4.61s-.007 3.389-.045 4.61c-.035.78-.166 1.204-.275 1.486a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.919.598-.28.11-.704.24-1.485.275-1.22.038-1.475.045-4.61.045s-3.389-.007-4.61-.045c-.78-.035-1.203-.166-1.485-.275a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.704-.275-1.485-.038-1.22-.045-1.475-.045-4.61s.007-3.389.045-4.61c.035-.78.166-1.203.275-1.485.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.281-.11.704-.24 1.485-.275C6.611 3.507 6.864 3.5 10 3.5z" clipRule="evenodd"/>
-                        <path d="M10 5.838a4.162 4.162 0 1 0 0 8.324 4.162 4.162 0 0 0 0-8.324zM10 12a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm4.208-7.208a.972.972 0 1 1-1.944 0 .972.972 0 0 1 1.944 0z"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white" style={{ letterSpacing: "-0.02em" }}>
+              Up and running in minutes
+            </h2>
           </div>
 
-          {/* Call to Action */}
-          <div className="text-center">
-            <button
-              onClick={() => navigate("/team")}
-              className="group relative px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold rounded-3xl text-lg transition-all duration-500 ease-in-out transform hover:-translate-y-2 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40 border-2 border-transparent hover:border-emerald-300/50 overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></span>
-              <span className="relative z-10 flex items-center justify-center">
-                <span className="font-rounded mr-3">Meet the Full Team</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                </svg>
-              </span>
+          <div ref={howRef} className="space-y-4">
+            {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
+              <div key={step} className="flex gap-6 items-start p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
+                style={{ background: T.bg2, border: `1px solid ${T.border}` }}>
+                <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-mono text-sm font-bold"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(192,132,252,0.2))",
+                    border: "1px solid rgba(99,102,241,0.3)",
+                    color: "#a5b4fc",
+                  }}>
+                  {step}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white text-base mb-1">{title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: T.textSubtle }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 5. ABOUT / MISSION ═══════════════════════════════════════════════ */}
+      <section className="py-28 px-6 text-center" style={{ background: T.bg1 }}>
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs uppercase tracking-widest mb-8"
+            style={{ border: `1px solid rgba(255,255,255,0.1)`, color: T.textMuted }}>
+            Our Mission
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-white leading-tight" style={{ letterSpacing: "-0.02em" }}>
+            Built for student communities,{" "}
+            <span style={{
+              background: "linear-gradient(135deg, #a5b4fc, #c084fc)",
+              backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>by student communities</span>
+          </h2>
+          <p className="text-base sm:text-lg leading-relaxed mb-10" style={{ color: T.textSubtle }}>
+            SocConnect was born from the frustration of managing a society using spreadsheets, WhatsApp groups,
+            and disconnected tools. We built the platform we always wished existed — one that understands how
+            college societies actually operate.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button onClick={() => navigate("/about")}
+              className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03]"
+              style={{
+                background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
+                color: "#0a0a0a",
+                boxShadow: "0 8px 32px rgba(255,255,255,0.1)",
+              }}>
+              About SocConnect
+            </button>
+            <button onClick={() => navigate("/team")}
+              className="px-8 py-3 rounded-full font-medium text-sm text-white/70 hover:text-white transition-all duration-200"
+              style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
+              Meet the Team
             </button>
           </div>
         </div>
       </section>
 
-      {/* Image Grid */}
-      <ImageGrid />
+      {/* ══ 6. CTA BANNER ════════════════════════════════════════════════════ */}
+      <section className="py-24 px-6" style={{ background: T.bg0 }}>
+        <div className="max-w-3xl mx-auto text-center">
+          {/* Glow orb */}
+          <div className="absolute left-1/2 -translate-x-1/2 w-96 h-96 pointer-events-none -mt-24"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)", filter: "blur(40px)" }} />
+
+          <div className="relative rounded-3xl p-12"
+            style={{
+              background: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(192,132,252,0.08) 100%)",
+              border: `1px solid rgba(99,102,241,0.2)`,
+              boxShadow: "0 0 80px rgba(99,102,241,0.08)",
+            }}>
+            {/* Top light-leak */}
+            <div className="absolute top-0 left-16 right-16 h-px"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(165,180,252,0.3), transparent)" }} />
+
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ letterSpacing: "-0.02em" }}>
+              Ready to modernise your society?
+            </h2>
+            <p className="text-base mb-8" style={{ color: T.textSubtle }}>
+              Join societies already running on SocConnect. It takes less than 5 minutes to get started.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <NavLink to="/signup">
+                <button className="px-10 py-3.5 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03]"
+                  style={{
+                    background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
+                    color: "#0a0a0a",
+                    boxShadow: "0 8px 40px rgba(255,255,255,0.2)",
+                  }}>
+                  Get Started — It's Free
+                </button>
+              </NavLink>
+              <NavLink to="/events">
+                <button className="px-8 py-3.5 rounded-full font-medium text-sm text-white/70 hover:text-white transition-all duration-200"
+                  style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
+                  Browse Events
+                </button>
+              </NavLink>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <Footer />
     </div>
-
   );
 }
 
