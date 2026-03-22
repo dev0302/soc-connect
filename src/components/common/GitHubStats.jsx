@@ -82,7 +82,7 @@ export default function GitHubStats() {
   if (loading || stats.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="mt-20 w-full max-w-4xl mx-auto px-4 font-inter border-t border-white/10 pt-16">
+    <div ref={containerRef} className="w-full max-w-4xl mx-auto px-4 font-inter">
       
       {/* Header & Toggle Button */}
       <div className="text-center mb-8">

@@ -35,6 +35,7 @@ import ManageTeam from "./pages/ManageTeam"
 import ManageSociety from "./pages/ManageSociety"
 import JoinTeamByLink from "./pages/JoinTeamByLink"
 import AuthAwareLayout from "./components/AuthAwareLayout"
+import Register from "./pages/Register"
 import { AnimatePresence, motion } from "framer-motion"
 
 function App() {
@@ -92,6 +93,7 @@ function App() {
                     <Route path="upcoming" element={<UpcomingEventPage />} />
                   </Route>
                 </Route>
+                <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />

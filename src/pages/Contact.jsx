@@ -1,11 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import Footer from "../components/common/Footer";
 import { NavLink } from "react-router-dom";
-
-gsap.registerPlugin(ScrollTrigger);
 
 /* ─── Design Tokens (Slate Navy) ──────────────────────────────────────── */
 const T = {
@@ -68,7 +65,6 @@ const Contact = () => {
   /* Lenis smooth scroll */
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
-    lenis.on("scroll", ScrollTrigger.update);
     const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
     requestAnimationFrame(raf);
     return () => lenis.destroy();
@@ -77,13 +73,13 @@ const Contact = () => {
   /* GSAP */
   useEffect(() => {
     const ctx = gsap.context(() => {
-      [formRef.current, infoRef.current].filter(Boolean).forEach((el) => {
-        gsap.fromTo(el,
+      const elements = [formRef.current, infoRef.current].filter(Boolean);
+      if (elements.length > 0) {
+        gsap.fromTo(elements,
           { opacity: 0, y: 60, scale: 0.97 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.1, ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" } }
+          { opacity: 1, y: 0, scale: 1, duration: 1.1, ease: "power3.out", stagger: 0.15 }
         );
-      });
+      }
     }, containerRef);
     return () => ctx.revert();
   }, []);
