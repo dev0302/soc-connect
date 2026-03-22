@@ -1,9 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Instagram, Linkedin, Monitor } from "react-feather";
 import GitHubStats from "./GitHubStats";
 
 const Footer = () => {
   const [devs, setDevs] = useState([]);
+
+  // Generate lightweight particles for the animated background
+  const particles = useMemo(() => {
+    return Array.from({ length: 30 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      size: Math.random() * 4 + 2,
+      duration: Math.random() * 15 + 10,
+      delay: Math.random() * 10,
+    }));
+  }, []);
 
   useEffect(() => {
     const headers = import.meta.env.VITE_GITHUB_TOKEN 
@@ -56,8 +67,32 @@ const Footer = () => {
             66% { transform: scale(0.9) translate(-40px, 40px); opacity: 0.4; }
             100% { transform: scale(1) translate(0, 0); opacity: 0.5; }
           }
+          @keyframes floatUp {
+            0% { transform: translateY(10vmax) scale(0); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-100vmax) scale(1.5); opacity: 0; }
+          }
         `}
       </style>
+
+      {/* Floating Particles / Sprinkles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full bg-white mix-blend-overlay"
+            style={{
+              left: `${p.left}%`,
+              bottom: "-20px",
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+              boxShadow: "0 0 10px 2px rgba(255,255,255,0.3)"
+            }}
+          ></div>
+        ))}
+      </div>
 
       {/* Animated Light Blobs */}
       <div 
@@ -132,14 +167,17 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* TEAM SECTION */}
-        <div className="mt-16 flex flex-col md:flex-row justify-center items-center md:items-start gap-12 md:gap-20">
+        {/* TEAM & CONTRIBUTORS SECTION */}
+        <div className="relative z-10 mt-20 pt-16 border-t border-white/10 grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-8 items-start">
+          
           {/* Developed By Section */}
-          <div className="flex flex-col items-center gap-6">
-            <span className="text-gray-500 uppercase tracking-[0.2em] text-[11px] font-bold">
-              Developed by
-            </span>
-            <div className="flex flex-wrap justify-center items-end gap-8">
+          <div className="flex flex-col items-center gap-8 lg:mt-6">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Core Team</h3>
+              <p className="text-sm text-[#797886]">The architects behind SocConnect</p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center items-end gap-8 mt-2">
               {devs.map((person, index) => (
                 <a
                   key={index}
@@ -150,8 +188,8 @@ const Footer = () => {
                 >
                   <div className="relative flex flex-col items-center">
                     {person.isLead && (
-                      <span className="absolute -top-6 whitespace-nowrap bg-blue-500/20 text-[#38bdf8] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#38bdf8]/30 uppercase tracking-tighter">
-                        Lead Developer
+                      <span className="absolute -top-6 whitespace-nowrap bg-blue-500/20 text-[#38bdf8] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#38bdf8]/30 uppercase tracking-tighter shadow-lg shadow-blue-500/20">
+                        Lead
                       </span>
                     )}
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] rounded-full opacity-0 group-hover:opacity-100 transition duration-300 blur"></div>
@@ -168,12 +206,16 @@ const Footer = () => {
               ))}
             </div>
           </div>
+
+          {/* Project Contributors */}
+          <div className="flex flex-col items-center w-full relative">
+            <div className="hidden lg:block absolute left-[-2rem] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+            <GitHubStats />
+          </div>
+
         </div>
 
-        {/* GITHUB INFOGRAPHIC */}
-        <GitHubStats />
-
-        <div className="mt-12 pt-8 text-center text-[11px] border-t border-white/5">
+        <div className="mt-12 pt-8 text-center text-[11px] border-t border-white/5 relative z-10">
           <p className="opacity-40 font-medium">
             &copy; {new Date().getFullYear()} SocConnect. 
             All rights reserved.

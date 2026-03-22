@@ -97,6 +97,7 @@ function Home() {
   const navigate = useNavigate();
 
   /* refs for GSAP */
+  const badgeRef = useRef();
   const titleRef = useRef();
   const descRef = useRef();
   const btnRef = useRef();
@@ -119,8 +120,9 @@ function Home() {
 
   /* GSAP */
   useGSAP(() => {
-    gsap.from(titleRef.current, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out" });
-    gsap.from(descRef.current, { y: 40, opacity: 0, duration: 1, ease: "power2.out", delay: 0.3 });
+    gsap.from(badgeRef.current, { y: 20, opacity: 0, duration: 1, ease: "power2.out", delay: 0.1 });
+    gsap.from(titleRef.current, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", delay: 0.2 });
+    gsap.from(descRef.current, { y: 40, opacity: 0, duration: 1, ease: "power2.out", delay: 0.4 });
     gsap.from(btnRef.current, { y: 30, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.6 });
 
     const counters = { members: 0, events: 0, societies: 0 };
@@ -164,16 +166,16 @@ function Home() {
         }} />
 
         {/* Badge */}
-        <div className="relative z-10 mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase"
+        <div ref={badgeRef} className="relative z-10 mt-16 mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase"
           style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" }}>
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" style={{ boxShadow: "0 0 6px rgba(99,102,241,0.9)" }} />
           The all-in-one society management platform
         </div>
 
         {/* Heading */}
-        <h1 ref={titleRef} className="relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4" style={{ letterSpacing: "-0.025em" }}>
-          <span className="text-white block">One Platform for</span>
-          <span className="block" style={{
+        <h1 ref={titleRef} className="relative z-10 text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-tight mb-4" style={{ letterSpacing: "-0.025em" }}>
+          <span className="text-white">One Platform for </span>
+          <span className="" style={{
             background: "linear-gradient(135deg, #ffffff 20%, #a5b4fc 55%, #c084fc 85%)",
             backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           }}>Every Society</span>
