@@ -196,6 +196,15 @@ function Home() {
 
         {/* CTAs */}
         <div ref={btnRef} className="relative z-10 flex flex-col sm:flex-row items-center gap-4 mb-16">
+          <button onClick={() => navigate("/register")}
+            className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #a855f7)",
+              color: "#fff",
+              boxShadow: "0 0 0 1px rgba(99,102,241,0.3), 0 8px 32px rgba(99,102,241,0.25)",
+            }}>
+            Register ✦
+          </button>
           <NavLink to="/signup">
             <button className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
               style={{

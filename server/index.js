@@ -12,6 +12,7 @@ const authRoutes = require("./routes/authRoute");
 const teamRoutes = require("./routes/teamRoute");
 const activityLogRoutes = require("./routes/activityLogRoute");
 const jamTheWebRoutes = require("./routes/jamTheWebRoute");
+const registrationRoutes = require("./routes/registrationRoute");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -40,6 +41,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/team", teamRoutes);
 app.use("/api/v1/activity-logs", activityLogRoutes);
 app.use("/api/v1/jamtheweb", jamTheWebRoutes);
+app.use("/api/v1/register", registrationRoutes);
 
 dbConnect()
   .then(() => {

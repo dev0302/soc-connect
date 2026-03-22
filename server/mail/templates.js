@@ -122,6 +122,31 @@ exports.passwordChangedTemplate = () => {
  * pre: { name, email, image, branch, year, position }
  * signupLink: full URL to signup page
  */
+/**
+ * Registration OTP for university / college / society flows
+ * @param {string} otp - 6-digit OTP
+ * @param {string} role - 'university' | 'college' | 'society'
+ */
+exports.registrationOtpTemplate = (otp, role) => {
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  const inner = `
+    <h1 style="${BASE_STYLES.title}">${roleLabel} Registration – Verify Your Email</h1>
+    <p style="${BASE_STYLES.body}">
+      You're registering your ${roleLabel} on <strong style="color:#e5e7eb;">SocConnect</strong>.
+      Use the OTP below to verify your email address.
+    </p>
+    <div style="${BASE_STYLES.box}">
+      <p style="color: #e5e7eb; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: monospace;">
+        ${otp}
+      </p>
+    </div>
+    <p style="${BASE_STYLES.footer}">
+      This OTP expires in 10 minutes. If you did not initiate this registration, you can safely ignore this email.
+    </p>
+  `;
+  return wrapCard(inner);
+};
+
 exports.signupInviteTemplate = (pre, signupLink) => {
   const imageUrl =
     pre.image && pre.image.trim()
