@@ -8,6 +8,11 @@ const {
   registerSociety,
 } = require("../controllers/registrationController");
 
+const {
+  searchIndianUniversities,
+  searchIndianColleges,
+} = require("../controllers/registrationSearchController");
+
 const router = express.Router();
 
 // OTP
@@ -21,5 +26,9 @@ router.post("/upload-logo", uploadLogo);
 router.post("/university", registerUniversity);
 router.post("/college", registerCollege);
 router.post("/society", registerSociety);
+
+// Search endpoints (proxy for api.data.gov.in so the browser avoids CORS).
+router.get("/search/universities", searchIndianUniversities);
+router.get("/search/colleges", searchIndianColleges);
 
 module.exports = router;

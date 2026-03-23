@@ -154,6 +154,7 @@ export default function CollegeRegister({ onClose }) {
                 value={collegeName} onChange={setCollegeName}
                 fetchOptions={fetchColleges}
                 placeholder="Search your college…"
+                fetchOnEmpty
               />
               <SearchableDropdown
                 label="Affiliated University" id="uni-name" required

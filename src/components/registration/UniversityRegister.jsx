@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import LogoUpload from "./LogoUpload";
 import PasswordField from "./PasswordField";
+import SearchableDropdown from "./SearchableDropdown";
 import { OtpInput } from "@/components/OtpInput";
-import { sendRegistrationOTP, verifyRegistrationOTP, registerUniversity } from "../../services/registrationApi";
+import { searchIndianUniversities, sendRegistrationOTP, verifyRegistrationOTP, registerUniversity } from "../../services/registrationApi";
 
 const STEPS = ["Basic Details", "Account", "Verify & Register"];
 const ROLE = "university";
@@ -45,6 +46,8 @@ export default function UniversityRegister({ onClose }) {
 
   // Step 3
   const [otp, setOtp] = useState("");
+
+  const fetchUniversities = useCallback(searchIndianUniversities, []);
 
   const go = (next) => { setDir(next > step ? 1 : -1); setStep(next); };
 
@@ -146,8 +149,15 @@ export default function UniversityRegister({ onClose }) {
             <motion.div key="step1" custom={dir} {...slide} className="space-y-4">
               <div>
                 <label className={labelCls}>University Name *</label>
-                <input className={inputCls} value={universityName} onChange={e => setUniversityName(e.target.value)}
-                  placeholder="e.g. University of Delhi" required />
+                <SearchableDropdown
+                  id="university-name"
+                  required
+                  value={universityName}
+                  onChange={setUniversityName}
+                  fetchOptions={fetchUniversities}
+                  placeholder="Search Indian university…"
+                  fetchOnEmpty
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

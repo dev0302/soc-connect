@@ -29,6 +29,9 @@ export default function SearchableDropdown({
   label,
   id,
   required = false,
+  minChars = 2,
+  fetchOnEmpty = false,
+  maxOptions = 500,
 }) {
   const [inputValue, setInputValue] = useState(value || "");
   const [options, setOptions] = useState([]);
@@ -44,14 +47,19 @@ export default function SearchableDropdown({
 
   // Fetch on debounced change
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
+    if (!debouncedQuery) {
+      if (!fetchOnEmpty) {
+        setOptions([]);
+        return;
+      }
+    } else if (debouncedQuery.length < minChars) {
       setOptions([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
     fetchOptions(debouncedQuery)
-      .then((res) => { if (!cancelled) setOptions(res || []); })
+      .then((res) => { if (!cancelled) setOptions((res || []).slice(0, maxOptions)); })
       .catch(() => { if (!cancelled) setOptions([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -96,7 +104,10 @@ export default function SearchableDropdown({
           type="text"
           value={inputValue}
           onChange={(e) => { setInputValue(e.target.value); onChange(e.target.value); setOpen(true); }}
-          onFocus={() => { if (inputValue.length >= 2) setOpen(true); }}
+          onFocus={() => {
+            if (fetchOnEmpty && inputValue.length === 0) setOpen(true);
+            else if (inputValue.length >= minChars) setOpen(true);
+          }}
           placeholder={placeholder}
           required={required}
           autoComplete="off"
@@ -134,7 +145,10 @@ export default function SearchableDropdown({
         </div>
       )}
 
-      {open && !loading && inputValue.length >= 2 && options.length === 0 && (
+      {open && !loading && (
+        (inputValue.length >= minChars && options.length === 0) ||
+        (fetchOnEmpty && inputValue.length === 0 && options.length === 0)
+      ) && (
         <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-500 shadow-2xl"
           style={{ background: "#1e1e30" }}>
           No results found — you can still type a custom value.
