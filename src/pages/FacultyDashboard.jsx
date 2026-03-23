@@ -1,6 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+import { getFacultyContext } from "../services/api";
 import {
   Building2,
   User,
@@ -23,14 +25,6 @@ import {
   Users as UsersIcon,
   CheckCircle2
 } from "lucide-react";
-
-/* ─── Mock Data ───────────────────────────────────────────────────────── */
-const PRE_FILLED_DATA = {
-  societyName: "Artificial Intelligence Club",
-  collegeName: "Bharati Vidyapeeth College of Engineering",
-  facultyEmail: "faculty.ai@bvcoe.ac.in",
-  facultyName: "Dr. Ananya Sharma", // editable later
-};
 
 /* ─── Animation Variants ──────────────────────────────────────────────── */
 const staggerContainer = {
@@ -216,13 +210,18 @@ function DashboardNav({ facultyName, societyName }) {
    MAIN PAGE
    ═════════════════════════════════════════════════════════════════════ */
 export default function FacultyDashboard() {
-  // Pre-filled un-editable Data
-  const societyName = PRE_FILLED_DATA.societyName;
-  const collegeName = PRE_FILLED_DATA.collegeName;
-  const facultyEmail = PRE_FILLED_DATA.facultyEmail;
+  const { user } = useAuth();
+  const [facultyContext, setFacultyContext] = useState({
+    societyName: user?.facultyContext?.societyName || "",
+    collegeName: user?.facultyContext?.collegeName || "",
+    logoUrl: user?.facultyContext?.logoUrl || "",
+  });
+  const [contextLoading, setContextLoading] = useState(false);
 
   // Editable Society Details State
-  const [facultyName, setFacultyName] = useState(PRE_FILLED_DATA.facultyName);
+  const [facultyName, setFacultyName] = useState(
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Faculty Incharge"
+  );
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [logoPreview, setLogoPreview] = useState(null);
@@ -233,6 +232,42 @@ export default function FacultyDashboard() {
   const [memberPosition, setMemberPosition] = useState("");
   const [memberEmail, setMemberEmail] = useState("");
   const [editingMemberId, setEditingMemberId] = useState(null);
+
+  const societyName = facultyContext.societyName || "—";
+  const collegeName = facultyContext.collegeName || "—";
+  const facultyEmail = user?.email || "—";
+
+  useEffect(() => {
+    // Pre-fill existing uploaded society logo so user is not forced to upload again.
+    if (!logoPreview && facultyContext.logoUrl) {
+      setLogoPreview(facultyContext.logoUrl);
+    }
+  }, [facultyContext.logoUrl, logoPreview]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setContextLoading(true);
+        const data = await getFacultyContext();
+        if (!cancelled) {
+          setFacultyContext({
+            societyName: data?.societyName || "",
+            collegeName: data?.collegeName || "",
+            logoUrl: data?.logoUrl || "",
+          });
+        }
+      } catch {
+        // Keep fallback from user.facultyContext if request fails.
+      } finally {
+        if (!cancelled) setContextLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /* ─── Handlers ──────────────────────────────────────────────────────── */
   const handleLogoUpload = (e) => {
@@ -352,7 +387,9 @@ export default function FacultyDashboard() {
             </div>
             <p className="text-xs text-gray-500 mt-4 flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/70" />
-              These details were pre-configured by the College Admin and cannot be changed here.
+              {contextLoading
+                ? "Loading faculty context..."
+                : "These details are fetched from your registered faculty/society mapping."}
             </p>
           </GlassCard>
 

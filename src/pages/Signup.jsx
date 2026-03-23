@@ -9,6 +9,12 @@ import { SpinnerCustom } from "../components/SpinnerCustom";
 import { OtpInput } from "@/components/OtpInput";
 import SearchableDropdown from "../components/registration/SearchableDropdown";
 import {
+  sendOTP as sendAuthOTP,
+  signup as authSignup,
+  resolveFacultyByEmail,
+  verifySignupOTP,
+} from "../services/api";
+import {
   sendRegistrationOTP,
   verifyRegistrationOTP,
   searchDatabaseSocieties,
@@ -32,6 +38,12 @@ const Signup = () => {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+  // Faculty-specific states (society/college lookup + allowed departments)
+  const [facultyResolveLoading, setFacultyResolveLoading] = useState(false);
+  const [facultyResolved, setFacultyResolved] = useState(false);
+  const [facultyCollegeName, setFacultyCollegeName] = useState("");
+  const [facultyAllowedDepartments, setFacultyAllowedDepartments] = useState([]);
+  const [facultySelectedDepartment, setFacultySelectedDepartment] = useState("");
 
   const [name, setName] = useState("");
   const [societyName, setSocietyName] = useState("");
@@ -69,6 +81,46 @@ const Signup = () => {
       toast.error("Please enter a valid email address.");
       return;
     }
+
+    // Faculty flow: resolve society/college by email first, then send auth OTP
+    if (selectedRole === "faculty") {
+      setFacultyResolveLoading(true);
+      try {
+        let chosenDepartment = facultySelectedDepartment;
+        if (!facultyResolved || !facultySelectedDepartment) {
+          const resolved = await resolveFacultyByEmail(email.trim());
+          setFacultyCollegeName(resolved.collegeName || "");
+          setSocietyName(resolved.societyName || "");
+          setFacultyAllowedDepartments(resolved.allowedDepartments || []);
+
+          const chosen =
+            (resolved.allowedDepartments || []).length === 1
+              ? resolved.allowedDepartments[0]
+              : (resolved.allowedDepartments || [])[0] || "";
+          setFacultySelectedDepartment(chosen);
+          chosenDepartment = chosen;
+          setFacultyResolved(true);
+        }
+
+        if (!chosenDepartment) {
+          toast.error("No allowed department found for this email.");
+          return;
+        }
+
+        setOtpLoading(true);
+        await sendAuthOTP({ email: email.trim(), department: chosenDepartment });
+        toast.success("OTP sent to your email!");
+        setOtpSent(true);
+        startCooldown();
+      } catch (err) {
+        toast.error(err.message || "Failed to send OTP.");
+      } finally {
+        setOtpLoading(false);
+        setFacultyResolveLoading(false);
+      }
+      return;
+    }
+
     setOtpLoading(true);
     try {
       await sendRegistrationOTP({ email: email.trim(), role: selectedRole });
@@ -83,13 +135,18 @@ const Signup = () => {
   };
 
   const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
+    const otpDigits = String(otp || "").replace(/\D/g, "");
+    if (otpDigits.length !== 6) {
       toast.error("Please enter a 6-digit OTP.");
       return;
     }
     setOtpLoading(true);
     try {
-      await verifyRegistrationOTP({ email: email.trim(), otp, role: selectedRole });
+      if (selectedRole === "faculty") {
+        await verifySignupOTP({ email: email.trim(), otp: otpDigits });
+      } else {
+        await verifyRegistrationOTP({ email: email.trim(), otp: otpDigits, role: selectedRole });
+      }
       toast.success("Email verified successfully!");
       setOtpVerified(true);
     } catch (err) {
@@ -115,14 +172,16 @@ const Signup = () => {
       return;
     }
     if (!name.trim()) return toast.error("Name is required.");
-    if (!societyName.trim()) return toast.error("Society Name is required.");
+    if (selectedRole !== "faculty" && !societyName.trim()) return toast.error("Society Name is required.");
 
     if (selectedRole === "core" && !position.trim()) return toast.error("Position is required.");
     if (selectedRole === "head" && !department.trim()) return toast.error("Department is required.");
     if (selectedRole === "executive" && !department.trim()) return toast.error("Department is required.");
 
-    const pwdErr = validatePassword(password);
-    if (pwdErr) return toast.error(pwdErr);
+    if (selectedRole !== "faculty") {
+      const pwdErr = validatePassword(password);
+      if (pwdErr) return toast.error(pwdErr);
+    }
 
     if (password !== confirmPassword) {
       return toast.error("Passwords do not match.");
@@ -130,11 +189,35 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      // Simulate backend POST request
-      await new Promise((res) => setTimeout(res, 1500));
-      toast.success(`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} account created successfully!`);
-      // Simulating "Next Page" redirection
-      navigate("/", { replace: true });
+      if (selectedRole === "faculty") {
+        const otpDigits = String(otp || "").replace(/\D/g, "");
+        if (!facultySelectedDepartment) {
+          toast.error("No allowed department selected for this email.");
+          return;
+        }
+
+        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+        const firstName = parts[0] || "";
+        const lastName = parts.length > 1 ? parts[parts.length - 1] : "";
+
+        await authSignup({
+          firstName,
+          lastName,
+          email: email.trim(),
+          password,
+          confirmPassword,
+          accountType: facultySelectedDepartment,
+          otp: otpDigits,
+        });
+
+        toast.success("Faculty account created successfully!");
+        navigate("/", { replace: true });
+      } else {
+        // Simulate backend POST request for non-faculty roles (existing behavior)
+        await new Promise((res) => setTimeout(res, 1500));
+        toast.success(`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} account created successfully!`);
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       toast.error("Account creation failed.");
     } finally {
@@ -153,6 +236,12 @@ const Signup = () => {
             setOtpVerified(false);
             setOtp("");
             setEmail("");
+            setFacultyResolveLoading(false);
+            setFacultyResolved(false);
+            setFacultyCollegeName("");
+            setFacultyAllowedDepartments([]);
+            setFacultySelectedDepartment("");
+            setSocietyName("");
             // Faculty defaults logic goes here if autofilling was supported natively in one click
           }}
           className="flex flex-col items-center justify-center p-6 bg-[#252536] border border-gray-600/50 hover:border-cyan-500 rounded-2xl cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:-translate-y-1"
@@ -224,11 +313,30 @@ const Signup = () => {
                         ? `Resend in ${resendCooldown}s`
                         : otpSent
                           ? "Resend OTP"
-                          : "Send OTP"}
+                          : selectedRole === "faculty"
+                            ? "Process"
+                            : "Send OTP"}
                   </button>
                 )}
               </div>
             </div>
+
+            {/* Faculty: show society/college info after resolving the email */}
+            {selectedRole === "faculty" && facultyResolved && (
+              <div className="rounded-xl border border-gray-600/30 bg-[#252536] p-4">
+                <p className="text-sm text-gray-300">
+                  <span className="text-gray-500">College:</span> <span className="text-white">{facultyCollegeName || "-"}</span>
+                </p>
+                <p className="text-sm text-gray-300">
+                  <span className="text-gray-500">Society:</span> <span className="text-white">{societyName || "-"}</span>
+                </p>
+                {facultyAllowedDepartments.length > 0 && (
+                  <p className="text-[12px] text-gray-500 mt-2">
+                    Department: <span className="text-gray-300">{facultySelectedDepartment || facultyAllowedDepartments[0]}</span>
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* OTP VERIFICATION ROW */}
             {otpSent && (
@@ -244,7 +352,7 @@ const Signup = () => {
                   </div>
                   <button
                     type="button"
-                    disabled={otpLoading || otpVerified || otp.length !== 6}
+                    disabled={otpLoading || otpVerified || String(otp || "").replace(/\D/g, "").length !== 6}
                     onClick={handleVerifyOTP}
                     className={`whitespace-nowrap px-5 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${
                       otpVerified
@@ -265,29 +373,29 @@ const Signup = () => {
             )}
 
             {/* SHARED NAME FIELD */}
-            <div>
-              <label className={labelClass}>Full Name *</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={inputClass}
-                placeholder="John Doe"
-              />
-            </div>
+            {(selectedRole !== "faculty" || otpVerified) && (
+              <div>
+                <label className={labelClass}>Full Name *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={inputClass}
+                  placeholder="John Doe"
+                />
+              </div>
+            )}
 
             {/* DYNAMIC MIDDLE FIELDS */}
             {selectedRole === "faculty" && (
               <div>
-                <label className={labelClass}>Society Name * (Auto-filled or Input)</label>
+                <label className={labelClass}>Society Name</label>
                 <input
                   type="text"
-                  value={societyName}
-                  onChange={(e) => setSocietyName(e.target.value)}
+                  value={societyName || ""}
+                  disabled
                   className={inputClass}
-                  placeholder="e.g. CodeX Society"
                 />
-                <p className="text-[11px] text-gray-500 mt-1">If your email matches an existing society, it will auto-populate.</p>
               </div>
             )}
 
@@ -331,37 +439,41 @@ const Signup = () => {
             )}
 
             {/* SHARED PASSWORD FIELDS */}
-            <div>
-              <label className={labelClass}>Create Password *</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={inputClass + " pr-11"}
-                  placeholder="Min 8 chars, 1 uppercase, 1 syntax"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
+            {(selectedRole !== "faculty" || otpVerified) && (
+              <>
+                <div>
+                  <label className={labelClass}>Create Password *</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inputClass + " pr-11"}
+                      placeholder="Enter your password"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
 
-            <div>
-              <label className={labelClass}>Confirm Password *</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={inputClass + " pr-11"}
-                  placeholder="Retype password"
-                />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
+                <div>
+                  <label className={labelClass}>Confirm Password *</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={inputClass + " pr-11"}
+                      placeholder="Retype password"
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <button
               type="submit"

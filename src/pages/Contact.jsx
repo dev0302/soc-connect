@@ -4,15 +4,15 @@ import Lenis from "lenis";
 import Footer from "../components/common/Footer";
 import { NavLink } from "react-router-dom";
 
-/* ─── Design Tokens (Slate Navy) ──────────────────────────────────────── */
+/* ─── Design Tokens (Midnight Indigo) ─────────────────────────────────── */
 const T = {
-  bg0: "#22212d",
-  bg1: "#2a2836",
-  bg2: "#312e40",
-  card: "#343045",
+  bg0: "#0b1020",
+  bg1: "#121a2f",
+  bg2: "#1a2340",
+  card: "#1f2a49",
   border: "rgba(255,255,255,0.08)",
-  textSubtle: "#797886",
-  textMuted: "#a7a6b4",
+  textSubtle: "#90a0c7",
+  textMuted: "#b3bfdc",
 };
 
 /* ─── Quick contact channels ─────────────────────────────────────────────── */

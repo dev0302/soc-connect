@@ -626,6 +626,9 @@ export default function Search({ variant = "navbar", isDarkNavbar = true, placeh
   const showDropdown = dropdownOpen && hasQuery;
   const isDark = variant === "manage-team" || (variant === "navbar" && isDarkNavbar);
   const isNavbar = variant === "navbar";
+  const dropdownClass = isNavbar
+    ? "search-dropdown search-dropdown-card absolute right-[-110px] left-auto mt-2 rounded-2xl border border-gray-500/40 bg-[#1e1e2f] z-50 w-[min(320px,calc(100vw-1rem))] min-w-0 max-w-[560px]"
+    : "search-dropdown search-dropdown-card absolute left-0 right-0 mt-2 rounded-2xl border border-gray-500/40 bg-[#1e1e2f] z-50 min-w-[320px] w-full max-w-[560px]";
 
   const inputBase =
     "w-full rounded-2xl border bg-transparent text-sm outline-none transition-colors";
@@ -671,7 +674,7 @@ export default function Search({ variant = "navbar", isDarkNavbar = true, placeh
         </div>
         {showDropdown && (
           <div
-            className="search-dropdown search-dropdown-card absolute left-0 right-0 mt-2 rounded-2xl border border-gray-500/40 bg-[#1e1e2f] z-50 min-w-[320px] w-full max-w-[560px]"
+            className={dropdownClass}
             role="listbox"
           >
             <div className="search-dropdown-header">

@@ -4,6 +4,11 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const PredefinedProfile = require("../models/PredefinedProfile");
 const SignupConfig = require("../models/SignupConfig");
+const SocietyRegistration = require("../models/SocietyRegistration");
+const SocietySignupConfig = require("../models/SocietySignupConfig");
+const SocietyFaculty = require("../models/SocietyFaculty");
+const College = require("../models/College");
+const University = require("../models/University");
 const crypto = require("crypto");
 const otpGenerator = require("otp-generator");
 const jwt = require("jsonwebtoken");
@@ -16,6 +21,65 @@ const { getEventUploadAllowedList } = require("./eventController");
 const SOCIETY_ROLES = ["ADMIN", "Chairperson", "Vice-Chairperson"];
 
 const PREDEFINED_IMAGE_BASE = "https://www.gfg-bvcoe.com";
+
+function findSocietyDepartmentAllowed(societySignupConfig, department, emailNorm) {
+  if (!societySignupConfig || !Array.isArray(societySignupConfig.departments)) return false;
+  const entry = societySignupConfig.departments.find((d) => (d.department || "").trim() === (department || "").trim());
+  if (!entry) return false;
+  return Array.isArray(entry.allowedEmails) ? entry.allowedEmails.includes(emailNorm) : false;
+}
+
+function getAllowedDepartmentsFromGlobalSignupConfig(emailNorm) {
+  return SignupConfig.find({ allowedEmails: emailNorm }).then((configs) =>
+    configs.map((c) => (c.department || "").trim()).filter(Boolean),
+  );
+}
+
+async function getFacultyContextByEmail(emailNorm) {
+  // Prefer explicit mapping created at faculty signup.
+  const mapped = await SocietyFaculty.findOne({ email: emailNorm }).lean().catch(() => null);
+  if (mapped) {
+    let logoUrl = "";
+    if (mapped.societyRegistration) {
+      const reg = await SocietyRegistration.findById(mapped.societyRegistration).select("logoUrl").lean().catch(() => null);
+      logoUrl = reg?.logoUrl || "";
+    }
+    return {
+      societyName: mapped.societyName || "",
+      collegeName: mapped.collegeName || "",
+      accountType: mapped.accountType || "ADMIN",
+      logoUrl,
+    };
+  }
+
+  // Fallback: use isolated society registration (email is faculty email there).
+  const societyReg = await SocietyRegistration.findOne({ email: emailNorm }).lean().catch(() => null);
+  if (societyReg) {
+    return {
+      societyName: societyReg.societyName || "",
+      collegeName: societyReg.collegeName || "",
+      accountType: "ADMIN",
+      logoUrl: societyReg.logoUrl || "",
+    };
+  }
+  return null;
+}
+
+async function getPreferredDashboardByEmail(emailNorm, accountType) {
+  if (accountType === "CollegeAdmin") return "/college-admin";
+  if (accountType === "UniversityAdmin") return "/university-admin";
+
+  const facultyCtx = await getFacultyContextByEmail(emailNorm);
+  if (facultyCtx) return "/faculty-dashboard";
+
+  const college = await College.findOne({ email: emailNorm }).select("_id").lean().catch(() => null);
+  if (college) return "/college-admin";
+
+  const university = await University.findOne({ email: emailNorm }).select("_id").lean().catch(() => null);
+  if (university) return "/university-admin";
+
+  return "/";
+}
 
 /** Find PredefinedProfile by email (case-insensitive) so stored casing never causes "not found". */
 function findPredefinedByEmail(email) {
@@ -38,16 +102,37 @@ exports.sendOTP = async (req, res) => {
     const emailNorm = email.trim().toLowerCase();
     const deptTrim = (department || "").trim();
 
-    // First check: is this email allowed for this department?
-    const config = await SignupConfig.findOne({
-      department: deptTrim,
-      allowedEmails: emailNorm,
-    });
-    if (!config) {
-      return res.status(403).json({
-        success: false,
-        message: "This email is not allowed to sign up for the selected department.",
-      });
+    // First check: if this email belongs to an isolated society, prefer society-scoped config.
+    const societyReg = await SocietyRegistration.findOne({ email: emailNorm }).lean().catch(() => null);
+    if (societyReg) {
+      const socCfg = await SocietySignupConfig.findOne({ societyRegistrationId: societyReg._id }).lean().catch(() => null);
+      if (socCfg) {
+        const allowed = findSocietyDepartmentAllowed(socCfg, deptTrim, emailNorm);
+        if (!allowed) {
+          return res.status(403).json({
+            success: false,
+            message: "This email is not allowed to sign up for the selected department.",
+          });
+        }
+      } else {
+        // Fallback: if society-specific config isn't created yet, use global signup config.
+        const config = await SignupConfig.findOne({ department: deptTrim, allowedEmails: emailNorm });
+        if (!config) {
+          return res.status(403).json({
+            success: false,
+            message: "This email is not allowed to sign up for the selected department.",
+          });
+        }
+      }
+    } else {
+      // Fallback: global signup config
+      const config = await SignupConfig.findOne({ department: deptTrim, allowedEmails: emailNorm });
+      if (!config) {
+        return res.status(403).json({
+          success: false,
+          message: "This email is not allowed to sign up for the selected department.",
+        });
+      }
     }
 
     const checkUserPresent = await User.findOne({ email: emailNorm });
@@ -189,15 +274,35 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const config = await SignupConfig.findOne({
-      department: accountType.trim(),
-      allowedEmails: emailNorm,
-    });
-    if (!config) {
-      return res.status(403).json({
-        success: false,
-        message: "This email is not allowed to sign up for the selected department.",
-      });
+    // Validate allowed email for the chosen accountType (department).
+    const societyReg = await SocietyRegistration.findOne({ email: emailNorm }).lean().catch(() => null);
+    if (societyReg) {
+      const socCfg = await SocietySignupConfig.findOne({ societyRegistrationId: societyReg._id }).lean().catch(() => null);
+      if (socCfg) {
+        const allowed = findSocietyDepartmentAllowed(socCfg, accountType.trim(), emailNorm);
+        if (!allowed) {
+          return res.status(403).json({
+            success: false,
+            message: "This email is not allowed to sign up for the selected department.",
+          });
+        }
+      } else {
+        const config = await SignupConfig.findOne({ department: accountType.trim(), allowedEmails: emailNorm });
+        if (!config) {
+          return res.status(403).json({
+            success: false,
+            message: "This email is not allowed to sign up for the selected department.",
+          });
+        }
+      }
+    } else {
+      const config = await SignupConfig.findOne({ department: accountType.trim(), allowedEmails: emailNorm });
+      if (!config) {
+        return res.status(403).json({
+          success: false,
+          message: "This email is not allowed to sign up for the selected department.",
+        });
+      }
     }
 
     const recentOTP = await OTP.find({ email: emailNorm }).sort({ createdAt: -1 }).limit(1);
@@ -239,6 +344,20 @@ exports.signup = async (req, res) => {
     userObj.token = token;
     userObj.password = undefined;
 
+    // If this is a faculty signup coming from an isolated SocietyRegistration,
+    // store a link record with society + college context.
+    if (societyReg) {
+      await SocietyFaculty.create({
+        societyRegistration: societyReg._id,
+        societyName: societyReg.societyName || "",
+        collegeName: societyReg.collegeName || "",
+        accountType: accountType.trim(),
+        user: newUser._id,
+        email: emailNorm,
+        facultyId: "",
+      }).catch(() => { });
+    }
+
     const isProduction = process.env.NODE_ENV === "production";
     const options = {
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -264,6 +383,76 @@ exports.signup = async (req, res) => {
   }
 };
 
+// Faculty UI: resolve society/college by email + return allowed departments.
+exports.resolveFacultyByEmail = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+    const emailNorm = String(email).trim().toLowerCase();
+
+    const societyReg = await SocietyRegistration.findOne({ email: emailNorm }).lean();
+    if (!societyReg) {
+      return res.status(404).json({ success: false, message: "Email not found in society registrations." });
+    }
+
+    const socCfg = await SocietySignupConfig.findOne({ societyRegistrationId: societyReg._id }).lean().catch(() => null);
+
+    let allowedDepartments = [];
+    if (socCfg && Array.isArray(socCfg.departments) && socCfg.departments.length) {
+      allowedDepartments = socCfg.departments
+        .filter((d) => Array.isArray(d.allowedEmails) && d.allowedEmails.includes(emailNorm))
+        .map((d) => (d.department || "").trim())
+        .filter(Boolean);
+    }
+
+    // If society-specific config isn't created yet, fallback to global signup config.
+    if (!socCfg) {
+      allowedDepartments = await getAllowedDepartmentsFromGlobalSignupConfig(emailNorm);
+    }
+
+    if (!allowedDepartments.length) {
+      return res.status(403).json({ success: false, message: "No allowed departments found for this email." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        societyName: societyReg.societyName,
+        collegeName: societyReg.collegeName,
+        logoUrl: societyReg.logoUrl || "",
+        allowedDepartments,
+      },
+    });
+  } catch (error) {
+    console.error("resolveFacultyByEmail error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to resolve faculty email." });
+  }
+};
+
+// Used by the faculty signup UI "Verify OTP" step.
+exports.verifySignupOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and otp are required." });
+    }
+    const emailNorm = String(email).trim().toLowerCase();
+    const otpStr = String(otp).trim();
+
+    const recentOTP = await OTP.find({ email: emailNorm }).sort({ createdAt: -1 }).limit(1);
+    if (!recentOTP.length || recentOTP[0].otp.toString() !== otpStr) {
+      return res.status(401).json({ success: false, message: "Invalid OTP." });
+    }
+
+    return res.status(200).json({ success: true, message: "OTP verified successfully." });
+  } catch (error) {
+    console.error("verifySignupOTP error:", error);
+    return res.status(500).json({ success: false, message: error.message || "OTP verification failed." });
+  }
+};
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -274,12 +463,95 @@ exports.login = async (req, res) => {
       });
     }
 
-    let user = await User.findOne({ email: email.trim().toLowerCase() }).populate("additionalDetails");
+    const emailNorm = email.trim().toLowerCase();
+    let user = await User.findOne({ email: emailNorm }).populate("additionalDetails");
+
+    // If a User is not present yet, allow direct login via registration credentials.
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not registered.",
-      });
+      const societyReg = await SocietyRegistration.findOne({ email: emailNorm });
+      if (societyReg) {
+        const matchesSocietyPassword = await bcrypt.compare(password, societyReg.password);
+        if (!matchesSocietyPassword) {
+          return res.status(403).json({
+            success: false,
+            message: "Password incorrect.",
+          });
+        }
+
+        // Auto-provision a real faculty user on first direct login.
+        const profileDetails = await Profile.create({
+          gender: null,
+          dob: null,
+          about: null,
+          phoneNumber: null,
+        });
+
+        user = await User.create({
+          firstName: "Faculty",
+          lastName: "Incharge",
+          email: emailNorm,
+          password: societyReg.password, // reuse existing hash from society registration
+          contact: "",
+          accountType: "ADMIN",
+          additionalDetails: profileDetails._id,
+          image: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent("Faculty Incharge")}`,
+        });
+
+        await SocietyFaculty.findOneAndUpdate(
+          { email: emailNorm, societyRegistration: societyReg._id, accountType: "ADMIN" },
+          {
+            $setOnInsert: {
+              societyRegistration: societyReg._id,
+              societyName: societyReg.societyName || "",
+              collegeName: societyReg.collegeName || "",
+              accountType: "ADMIN",
+              email: emailNorm,
+              facultyId: "",
+            },
+            $set: { user: user._id },
+          },
+          { upsert: true, new: true }
+        );
+
+        user = await User.findById(user._id).populate("additionalDetails");
+      } else {
+        const collegeReg = await College.findOne({ email: emailNorm }).lean();
+        if (!collegeReg) {
+          return res.status(401).json({
+            success: false,
+            message: "User not registered.",
+          });
+        }
+
+        const matchesCollegePassword = await bcrypt.compare(password, collegeReg.password);
+        if (!matchesCollegePassword) {
+          return res.status(403).json({
+            success: false,
+            message: "Password incorrect.",
+          });
+        }
+
+        // Auto-provision a college admin user on first direct login.
+        const profileDetails = await Profile.create({
+          gender: null,
+          dob: null,
+          about: null,
+          phoneNumber: null,
+        });
+
+        user = await User.create({
+          firstName: "College",
+          lastName: "Admin",
+          email: emailNorm,
+          password: collegeReg.password, // reuse existing hash from college registration
+          contact: "",
+          accountType: "CollegeAdmin",
+          additionalDetails: profileDetails._id,
+          image: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(collegeReg.name || "College Admin")}`,
+        });
+
+        user = await User.findById(user._id).populate("additionalDetails");
+      }
     }
 
     if (!(await bcrypt.compare(password, user.password))) {
@@ -301,6 +573,9 @@ exports.login = async (req, res) => {
     user.password = undefined;
     const eventUploadAllowed = await getEventUploadAllowedList();
     user.canManageEvents = eventUploadAllowed.includes(user.accountType);
+    const facultyContext = await getFacultyContextByEmail(emailNorm);
+    if (facultyContext) user.facultyContext = facultyContext;
+    user.preferredDashboard = await getPreferredDashboardByEmail(emailNorm, user.accountType);
 
     const isProduction = process.env.NODE_ENV === "production";
     const options = {
@@ -500,9 +775,26 @@ exports.me = async (req, res) => {
     const user = userDoc.toObject();
     const eventUploadAllowed = await getEventUploadAllowedList();
     user.canManageEvents = eventUploadAllowed.includes(user.accountType);
+    const facultyContext = await getFacultyContextByEmail((user.email || "").trim().toLowerCase());
+    if (facultyContext) user.facultyContext = facultyContext;
+    user.preferredDashboard = await getPreferredDashboardByEmail((user.email || "").trim().toLowerCase(), user.accountType);
     return res.status(200).json({ success: true, user });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Authenticated faculty data for dashboard rendering.
+exports.getFacultyContext = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("email accountType").lean();
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    const ctx = await getFacultyContextByEmail((user.email || "").trim().toLowerCase());
+    if (!ctx) return res.status(404).json({ success: false, message: "Faculty context not found." });
+    return res.status(200).json({ success: true, data: ctx });
+  } catch (error) {
+    console.error("getFacultyContext error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch faculty context." });
   }
 };
 

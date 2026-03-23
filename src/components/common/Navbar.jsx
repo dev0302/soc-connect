@@ -17,17 +17,20 @@ import { LayoutDashboard, Users, Settings, BookOpen, FileText, Library, Clipboar
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading, logout } = useAuth();
 
   const navLinkClass = ({ isActive }) =>
-    `relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+    `relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
       isActive
-        ? "text-white"
-        : "text-[#a0a0a0] hover:text-white"
+        ? "text-white bg-white/12"
+        : "text-[#d1d5db] hover:text-white hover:bg-white/5"
     }`;
 
   const mobileNavLinkClass = ({ isActive }) =>
-    `text-2xl font-semibold transition-colors duration-200 ${isActive ? "text-white" : "text-[#a0a0a0] hover:text-white"}`;
+    `flex items-center rounded-xl px-4 py-3 text-base font-medium transition-colors duration-200 ${
+      isActive ? "text-white bg-white/12" : "text-[#d1d5db] hover:text-white hover:bg-white/5"
+    }`;
 
   const path = location.pathname;
   let navLinks = [];
@@ -72,25 +75,23 @@ function Navbar() {
   return (
     <>
       {/* ── Main Navbar Bar ── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full pointer-events-none w-[97%] mx-auto">
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full pointer-events-none px-3 sm:px-5 pt-3">
         <div
-          className="w-full max-w-screen-xl relative px-4 sm:px-6 h-14 flex items-center justify-between rounded-3xl pointer-events-auto"
+          className="w-full max-w-screen-xl relative px-4 sm:px-6 h-16 flex items-center justify-between rounded-2xl pointer-events-auto"
           style={{
-            background: "rgba(42, 40, 54, 0.8)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
-            borderLeft: "1px solid rgba(255, 255, 255, 0.15)",
-            borderRight: "1px solid rgba(255, 255, 255, 0.15)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+            background: "linear-gradient(180deg, rgba(34,34,40,0.84), rgba(24,24,30,0.88))",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
 
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2.5 shrink-0 group">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-black font-bold text-sm"
-              style={{ background: "linear-gradient(135deg, #ffffff, #d4d4d4)" }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-black font-bold text-sm"
+              style={{ background: "linear-gradient(135deg, #ffffff, #e9e9ec)" }}
             >
               S
             </div>
@@ -108,7 +109,7 @@ function Navbar() {
           </NavLink>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-1">
+          <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-2xl p-1 border border-white/10 bg-black/10">
             {navLinks.map(({ to, label, icon, exact }) => (
               <NavLink
                 key={to}
@@ -122,8 +123,8 @@ function Navbar() {
                     <span>{label}</span>
                     {isActive && (
                       <span
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white"
-                        style={{ boxShadow: "0 0 4px rgba(255,255,255,0.8)" }}
+                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/90"
+                        style={{ boxShadow: "0 0 6px rgba(255,255,255,0.6)" }}
                       />
                     )}
                   </>
@@ -133,12 +134,12 @@ function Navbar() {
           </nav>
 
           {/* Desktop Right: Search + Auth */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden md:flex  items-center gap-3">
             {user && (
               <Search
                 variant="navbar"
                 placeholder="Search members…"
-                className="shrink-0"
+                className="shrink-0 w-[100px]"
               />
             )}
 
@@ -150,7 +151,7 @@ function Navbar() {
               <>
                 <NavLink to="/login">
                   <button
-                    className="px-4 py-1.5 rounded-full text-sm font-medium text-white/80 hover:text-white transition-colors"
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
                     style={{ border: "1px solid rgba(255,255,255,0.18)" }}
                   >
                     Login
@@ -158,7 +159,7 @@ function Navbar() {
                 </NavLink>
                 <NavLink to="/signup">
                   <button
-                    className="px-4 py-1.5 rounded-full text-sm font-medium text-white/80 hover:text-white transition-colors"
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
                     style={{ border: "1px solid rgba(255,255,255,0.18)" }}
                   >
                     Signup
@@ -166,7 +167,7 @@ function Navbar() {
                 </NavLink>
                 <NavLink to="/register">
                   <button
-                    className="px-4 py-1.5 rounded-full text-sm font-semibold text-black bg-white hover:bg-gray-100 transition-all duration-200"
+                    className="px-4 py-2 rounded-xl text-sm font-semibold text-black bg-white hover:bg-gray-100 transition-all duration-200"
                     style={{ boxShadow: "0 0 16px rgba(255,255,255,0.15)" }}
                   >
                     Register
@@ -177,7 +178,7 @@ function Navbar() {
           </div>
 
           {/* Mobile Right: avatar + hamburger */}
-          <div className="sm:hidden flex items-center gap-2 z-50">
+          <div className="md:hidden flex items-center gap-2 z-50">
             {authLoading ? (
               <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
             ) : user ? (
@@ -193,7 +194,7 @@ function Navbar() {
             ) : null}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-[#a0a0a0] hover:text-white focus:outline-none transition-colors"
+              className="h-9 w-9 rounded-lg border border-white/15 bg-white/5 text-[#c4c4cc] hover:text-white hover:bg-white/10 focus:outline-none transition-colors flex items-center justify-center"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -214,8 +215,8 @@ function Navbar() {
       {/* ── Mobile Backdrop ── */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 z-30 sm:hidden"
-          style={{ background: "rgba(0,0,0,0.4)" }}
+          className="fixed inset-0 z-30 md:hidden"
+          style={{ background: "rgba(0,0,0,0.5)" }}
           onClick={() => setIsMenuOpen(false)}
         />
       )}
@@ -223,16 +224,22 @@ function Navbar() {
       {/* ── Mobile Slide-in Menu ── */}
       <div
         className={`fixed inset-0 z-40 transform transition-transform duration-300 ease-in-out sm:hidden ${
-          isMenuOpen ? "translate-x-40" : "translate-x-full"
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{
-          background: "rgba(34, 33, 45, 0.96)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderLeft: "1px solid rgba(255,255,255,0.08)",
-        }}
       >
-        <ul className="flex flex-col ml-8 mt-8 justify-center h-full gap-8">
+        <div className="ml-auto h-full w-[86%] max-w-sm p-6"
+          style={{
+            background: "rgba(24, 24, 30, 0.96)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderLeft: "1px solid rgba(255,255,255,0.12)",
+            boxShadow: "-20px 0 40px rgba(0,0,0,0.35)",
+          }}>
+        <div className="mb-5">
+          <div className="text-xs uppercase tracking-widest text-white/50">Menu</div>
+          <div className="mt-1 text-lg font-semibold text-white">SocConnect</div>
+        </div>
+        <ul className="flex flex-col gap-2">
           {navLinks.map(({ to, label, exact }) => (
             <li key={to}>
               <NavLink
@@ -247,13 +254,13 @@ function Navbar() {
           ))}
 
           {/* Auth buttons in mobile menu */}
-          <li className="mt-2 flex flex-col gap-3">
+          <li className="mt-6 flex flex-col gap-3">
             {user ? (
               <>
                 {isSocietyRole(user.accountType) && (
                   <NavLink to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                     <button
-                      className="py-3 px-8 rounded-full font-medium text-white/80"
+                      className="w-full py-3 px-4 rounded-xl font-medium text-white/80 text-left"
                       style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                     >
                       Dashboard
@@ -262,7 +269,7 @@ function Navbar() {
                 )}
                 <NavLink to="/profile" onClick={() => setIsMenuOpen(false)}>
                   <button
-                    className="py-3 px-8 rounded-full font-medium text-white/80"
+                    className="w-full py-3 px-4 rounded-xl font-medium text-white/80 text-left"
                     style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                   >
                     Profile
@@ -274,7 +281,7 @@ function Navbar() {
                     setIsMenuOpen(false);
                     navigate("/");
                   }}
-                  className="w-fit py-3 px-8 rounded-full font-medium text-white/60 hover:text-white transition-colors"
+                  className="w-full py-3 px-4 rounded-xl font-medium text-white/60 hover:text-white transition-colors text-left"
                   style={{ border: "1px solid rgba(255,255,255,0.12)" }}
                 >
                   Logout
@@ -284,22 +291,22 @@ function Navbar() {
               <>
                 <NavLink to="/login" onClick={() => setIsMenuOpen(false)} className="w-fit">
                   <button
-                    className="py-3 px-8 rounded-full font-medium text-white/80 hover:text-white transition-colors"
+                    className="w-full py-3 px-4 rounded-xl font-medium text-white/80 hover:text-white transition-colors text-left"
                     style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                   >
                     Login
                   </button>
                 </NavLink>
-                <NavLink to="/signup" onClick={() => setIsMenuOpen(false)} className="w-fit">
+                <NavLink to="/signup" onClick={() => setIsMenuOpen(false)}>
                   <button
-                    className="py-3 px-8 rounded-full font-medium text-white/80 hover:text-white transition-colors"
+                    className="w-full py-3 px-4 rounded-xl font-medium text-white/80 hover:text-white transition-colors text-left"
                     style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                   >
                     Signup
                   </button>
                 </NavLink>
-                <NavLink to="/register" onClick={() => setIsMenuOpen(false)} className="w-fit">
-                  <button className="py-3 px-8 bg-white text-black font-semibold rounded-full hover:bg-gray-100 transition-colors">
+                <NavLink to="/register" onClick={() => setIsMenuOpen(false)}>
+                  <button className="w-full py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors text-left">
                     Register
                   </button>
                 </NavLink>
@@ -307,6 +314,7 @@ function Navbar() {
             )}
           </li>
         </ul>
+        </div>
       </div>
     </>
   );

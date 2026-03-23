@@ -1,28 +1,22 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useRef, useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
 import Footer from "../components/common/Footer";
 import UpcomingEventSection from "../components/UpcomingEventSection";
 import Lenis from "lenis";
 import { useFeatureFlags } from "../context/FeatureFlags.jsx";
 
-gsap.registerPlugin(ScrollTrigger);
-
-/* ─── Design Tokens (Slate Navy) ─────────────────────────────────────── */
+/* ─── Design Tokens (Midnight Indigo) ─────────────────────────────────── */
 const T = {
-  bg0: "#22212d",
-  bg1: "#2a2836",
-  bg2: "#312e40",
-  bg3: "#3d3a4d",
-  card: "#343045",
+  bg0: "#0b1020",
+  bg1: "#121a2f",
+  bg2: "#1a2340",
+  bg3: "#263055",
+  card: "#1f2a49",
   border: "rgba(255,255,255,0.08)",
   borderHover: "rgba(255,255,255,0.16)",
-  textPrimary: "#f0f0f4",
-  textMuted: "#a7a6b4",
-  textSubtle: "#797886",
+  textPrimary: "#eef2ff",
+  textMuted: "#b3bfdc",
+  textSubtle: "#90a0c7",
 };
 
 /* ─── Feature cards data ─────────────────────────────────────────────────── */
@@ -92,59 +86,21 @@ const HOW_IT_WORKS = [
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 function Home() {
-  const { user } = useAuth();
   const { leaderboardEnabled } = useFeatureFlags();
   const navigate = useNavigate();
 
-  /* refs for GSAP */
-  const badgeRef = useRef();
-  const titleRef = useRef();
-  const descRef = useRef();
-  const btnRef = useRef();
-  const featuresRef = useRef();
-  const howRef = useRef();
-
-  const [memberCount, setMemberCount] = useState(0);
-  const [eventCount, setEventCount] = useState(0);
-  const [societyCount, setSocietyCount] = useState(0);
-
-  /* Lenis smooth scroll */
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.05, smoothWheel: true });
-    lenis.on("scroll", ScrollTrigger.update);
-    const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
-    requestAnimationFrame(raf);
-    ScrollTrigger.refresh();
-    return () => lenis.destroy();
-  }, []);
-
-  /* GSAP */
-  useGSAP(() => {
-    gsap.from(badgeRef.current, { y: 20, opacity: 0, duration: 1, ease: "power2.out", delay: 0.1 });
-    gsap.from(titleRef.current, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", delay: 0.2 });
-    gsap.from(descRef.current, { y: 40, opacity: 0, duration: 1, ease: "power2.out", delay: 0.4 });
-    gsap.from(btnRef.current, { y: 30, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.6 });
-
-    const counters = { members: 0, events: 0, societies: 0 };
-    gsap.to(counters, {
-      duration: 3.5, ease: "power2.out", delay: 0.8,
-      members: 500, events: 80, societies: 30,
-      onUpdate: () => {
-        setMemberCount(Math.ceil(counters.members));
-        setEventCount(Math.ceil(counters.events));
-        setSocietyCount(Math.ceil(counters.societies));
-      },
-    });
-
-    gsap.from(featuresRef.current?.children, {
-      y: 60, opacity: 0, duration: 0.7, ease: "power2.out", stagger: 0.1,
-      scrollTrigger: { trigger: featuresRef.current, start: "top 80%", toggleActions: "play none none reverse" },
-    });
-
-    gsap.from(howRef.current?.children, {
-      y: 50, opacity: 0, duration: 0.8, ease: "power2.out", stagger: 0.15,
-      scrollTrigger: { trigger: howRef.current, start: "top 80%", toggleActions: "play none none reverse" },
-    });
+    let rafId = 0;
+    const raf = (time) => {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    };
+    rafId = requestAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   return (
@@ -166,14 +122,14 @@ function Home() {
         }} />
 
         {/* Badge */}
-        <div ref={badgeRef} className="relative z-10 mt-16 mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase"
+        <div className="relative z-10 mt-16 mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase"
           style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" style={{ boxShadow: "0 0 6px rgba(99,102,241,0.9)" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ boxShadow: "0 0 6px rgba(99,102,241,0.9)" }} />
           The all-in-one society management platform
         </div>
 
         {/* Heading */}
-        <h1 ref={titleRef} className="relative z-10 text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-tight mb-4" style={{ letterSpacing: "-0.025em" }}>
+        <h1 className="relative z-10 text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-tight mb-4" style={{ letterSpacing: "-0.025em" }}>
           <span className="text-white">One Platform for </span>
           <span className="" style={{
             background: "linear-gradient(135deg, #ffffff 20%, #a5b4fc 55%, #c084fc 85%)",
@@ -189,15 +145,15 @@ function Home() {
         }}>Manage. Connect. Grow.</p>
 
         {/* Subtext */}
-        <p ref={descRef} className="relative z-10 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10" style={{ color: T.textSubtle }}>
+        <p className="relative z-10 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10" style={{ color: T.textSubtle }}>
           SocConnect is a complete ecosystem for college societies — manage members, departments,
           events, teams, and recruitment all from one unified platform.
         </p>
 
         {/* CTAs */}
-        <div ref={btnRef} className="relative z-10 flex flex-col sm:flex-row items-center gap-4 mb-16">
+        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 mb-16">
           <button onClick={() => navigate("/register")}
-            className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            className="px-8 py-3 rounded-full font-semibold text-sm"
             style={{
               background: "linear-gradient(135deg, #6366f1, #a855f7)",
               color: "#fff",
@@ -206,7 +162,7 @@ function Home() {
             Register ✦
           </button>
           <NavLink to="/signup">
-            <button className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            <button className="px-8 py-3 rounded-full font-semibold text-sm"
               style={{
                 background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
                 color: "#0a0a0a",
@@ -216,13 +172,13 @@ function Home() {
             </button>
           </NavLink>
           <button onClick={() => navigate("/about")}
-            className="px-8 py-3 rounded-full font-medium text-sm text-white/80 hover:text-white transition-all duration-200 hover:scale-[1.02]"
+            className="px-8 py-3 rounded-full font-medium text-sm text-white/80 hover:text-white"
             style={{ border: "1px solid rgba(255,255,255,0.18)" }}>
             Learn More
           </button>
           {leaderboardEnabled && (
             <button onClick={() => navigate("/leaderboard")}
-              className="px-8 py-3 rounded-full font-medium text-sm text-white/60 hover:text-white transition-all duration-200"
+              className="px-8 py-3 rounded-full font-medium text-sm text-white/60 hover:text-white"
               style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
               Leaderboard
             </button>
@@ -239,9 +195,9 @@ function Home() {
               style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)" }} />
             <div className="grid grid-cols-3 gap-6 text-center">
               {[
-                { val: `${societyCount}+`, label: "Societies" },
-                { val: `${memberCount}+`, label: "Members", bordered: true },
-                { val: `${eventCount}+`, label: "Events Run" },
+                { val: "30+", label: "Societies" },
+                { val: "500+", label: "Members", bordered: true },
+                { val: "80+", label: "Events Run" },
               ].map(({ val, label, bordered }) => (
                 <div key={label} className="flex flex-col items-center"
                   style={bordered ? { borderLeft: `1px solid ${T.border}`, borderRight: `1px solid ${T.border}` } : {}}>
@@ -275,10 +231,10 @@ function Home() {
           </div>
 
           {/* Feature grid */}
-          <div ref={featuresRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map(({ icon, title, desc, gradient, border }) => (
               <div key={title}
-                className={`group relative rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${gradient}`}
+                className={`group relative rounded-2xl p-6 bg-gradient-to-br ${gradient}`}
                 style={{ border: `1px solid ${border}`, background: T.card }}>
                 {/* Light leak top */}
                 <div className="absolute top-0 left-6 right-6 h-px"
@@ -305,9 +261,9 @@ function Home() {
             </h2>
           </div>
 
-          <div ref={howRef} className="space-y-4">
+          <div className="space-y-4">
             {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
-              <div key={step} className="flex gap-6 items-start p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
+              <div key={step} className="flex gap-6 items-start p-6 rounded-2xl"
                 style={{ background: T.bg2, border: `1px solid ${T.border}` }}>
                 <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-mono text-sm font-bold"
                   style={{
@@ -348,7 +304,7 @@ function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate("/about")}
-              className="px-8 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03]"
+              className="px-8 py-3 rounded-full font-semibold text-sm"
               style={{
                 background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
                 color: "#0a0a0a",
@@ -357,7 +313,7 @@ function Home() {
               About SocConnect
             </button>
             <button onClick={() => navigate("/team")}
-              className="px-8 py-3 rounded-full font-medium text-sm text-white/70 hover:text-white transition-all duration-200"
+              className="px-8 py-3 rounded-full font-medium text-sm text-white/70 hover:text-white"
               style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
               Meet the Team
             </button>
@@ -390,7 +346,7 @@ function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <NavLink to="/signup">
-                <button className="px-10 py-3.5 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-[1.03]"
+                <button className="px-10 py-3.5 rounded-full font-semibold text-sm"
                   style={{
                     background: "linear-gradient(145deg, #ffffff, #e0e0e0)",
                     color: "#0a0a0a",
@@ -400,7 +356,7 @@ function Home() {
                 </button>
               </NavLink>
               <NavLink to="/events">
-                <button className="px-8 py-3.5 rounded-full font-medium text-sm text-white/70 hover:text-white transition-all duration-200"
+                <button className="px-8 py-3.5 rounded-full font-medium text-sm text-white/70 hover:text-white"
                   style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
                   Browse Events
                 </button>

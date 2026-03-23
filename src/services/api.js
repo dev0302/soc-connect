@@ -389,6 +389,37 @@ export async function getOtpForAutofill(pollToken) {
   return data;
 }
 
+/** Resolve faculty signup eligibility by email (society/college + allowed departments). */
+export async function resolveFacultyByEmail(email) {
+  const res = await fetch(`${BASE}/api/v1/auth/faculty/resolve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to resolve faculty email");
+  return data.data;
+}
+
+/** Verify OTP for signup modal (faculty flow uses this step). */
+export async function verifySignupOTP({ email, otp }) {
+  const res = await fetch(`${BASE}/api/v1/auth/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "OTP verification failed");
+  return data;
+}
+
+export async function getFacultyContext() {
+  const res = await authFetch("/api/v1/auth/faculty/context");
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to fetch faculty context");
+  return data.data;
+}
+
 export async function signup(body) {
   const res = await authFetch('/api/v1/auth/signup', {
     method: 'POST',

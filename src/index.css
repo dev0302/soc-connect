@@ -6,14 +6,14 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* Slate Navy Design Tokens */
-  --bg-base: #22212d;
-  --bg-section: #2a2836;
-  --bg-card: #312e40;
-  --bg-card-high: #3d3a4d;
-  --text-primary: #f0f0f4;
-  --text-muted: #a7a6b4;
-  --text-subtle: #797886;
+  /* Midnight Indigo Design Tokens */
+  --bg-base: #0b1020;
+  --bg-section: #121a2f;
+  --bg-card: #1a2340;
+  --bg-card-high: #263055;
+  --text-primary: #eef2ff;
+  --text-muted: #b3bfdc;
+  --text-subtle: #90a0c7;
   --accent-indigo: #6366f1;
   --outline: rgba(255, 255, 255, 0.08);
 
@@ -108,11 +108,14 @@ body {
 }
 
 .darkthemebg {
-  background-image: linear-gradient(to bottom right, #1e1e2f, #2c2c3e);
+  background:
+    radial-gradient(1100px 600px at -10% -10%, rgba(148, 163, 184, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(167, 139, 250, 0.08), transparent 58%),
+    linear-gradient(135deg, #11131d 0%, #171b28 45%, #1c2231 100%);
 }
 
 .darkthemebg2 {
-  background-color: #2a2a3d;
+  background: linear-gradient(145deg, #1b2130, #242c3d);
 }
 
 

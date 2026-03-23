@@ -63,15 +63,8 @@ export default function UniversityRegister({ onClose }) {
   const validateStep2 = () => {
     if (!email.trim()) { toast.error("Email is required."); return false; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { toast.error("Enter a valid email address."); return false; }
-    const checks = [
-      [password.length < 8, "Password must be at least 8 characters."],
-      [!/[A-Z]/.test(password), "Password must include an uppercase letter."],
-      [!/[a-z]/.test(password), "Password must include a lowercase letter."],
-      [!/[0-9]/.test(password), "Password must include a number."],
-      [!/[^A-Za-z0-9]/.test(password), "Password must include a special character."],
-      [password !== confirmPassword, "Passwords do not match."],
-    ];
-    for (const [fail, msg] of checks) if (fail) { toast.error(msg); return false; }
+    if (!password.trim()) { toast.error("Password is required."); return false; }
+    if (password !== confirmPassword) { toast.error("Passwords do not match."); return false; }
     return true;
   };
 
@@ -90,10 +83,11 @@ export default function UniversityRegister({ onClose }) {
   };
 
   const handleVerifyOTP = async () => {
-    if (otp.length !== 6) { toast.error("Enter the 6-digit OTP."); return; }
+    const otpDigits = otp.replace(/\D/g, "");
+    if (otpDigits.length !== 6) { toast.error("Enter the 6-digit OTP."); return; }
     setVerifying(true);
     try {
-      await verifyRegistrationOTP({ email: email.trim(), otp, role: ROLE });
+      await verifyRegistrationOTP({ email: email.trim(), otp: otpDigits, role: ROLE });
       setOtpVerified(true);
       toast.success("OTP verified!");
     } catch (err) {
@@ -225,7 +219,7 @@ export default function UniversityRegister({ onClose }) {
               </div>
               <div className="flex gap-2">
                 {!otpVerified ? (
-                  <button onClick={handleVerifyOTP} disabled={verifying || otp.length < 6}
+                  <button onClick={handleVerifyOTP} disabled={verifying || otp.replace(/\D/g, "").length < 6}
                     className="flex-1 py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold disabled:opacity-40 transition-colors">
                     {verifying ? "Verifying…" : "Verify OTP"}
                   </button>

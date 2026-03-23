@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { isSocietyRole } from "../services/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,12 +21,24 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      const res = await login(email.trim(), password);
       toast.success("Logged in successfully.", {
         position: "bottom-right",
         style: { background: "#16a34a", color: "#fff", border: "none" },
       });
-      navigate("/");
+      const accountType = res?.user?.accountType;
+      const preferredDashboard = res?.user?.preferredDashboard;
+      if (preferredDashboard) {
+        navigate(preferredDashboard);
+      } else if (accountType === "CollegeAdmin") {
+        navigate("/college-admin");
+      } else if (accountType === "UniversityAdmin") {
+        navigate("/university-admin");
+      } else if (isSocietyRole(accountType)) {
+        navigate("/faculty-dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       toast.error(err.message || "Login failed.");
     } finally {

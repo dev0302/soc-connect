@@ -2,19 +2,51 @@ const RegistrationOTP = require("../models/RegistrationOTP");
 const University = require("../models/University");
 const College = require("../models/College");
 const Society = require("../models/Society");
+const SocietyRegistration = require("../models/SocietyRegistration");
+const SocietySignupConfig = require("../models/SocietySignupConfig");
+const SignupConfig = require("../models/SignupConfig");
 const mailSender = require("../utils/mailSender");
 const { registrationOtpTemplate } = require("../mail/templates");
 const { imageUpload } = require("../config/cloudinary");
 const bcrypt = require("bcrypt");
 const otpGenerator = require("otp-generator");
 
-/* ─── Strong password validation ────────────────────────────────────────── */
-function validatePassword(password) {
-  if (!password || password.length < 8) return "Password must be at least 8 characters.";
-  if (!/[A-Z]/.test(password)) return "Password must include at least one uppercase letter.";
-  if (!/[a-z]/.test(password)) return "Password must include at least one lowercase letter.";
-  if (!/[0-9]/.test(password)) return "Password must include at least one number.";
-  if (!/[^A-Za-z0-9]/.test(password)) return "Password must include at least one special character.";
+async function createUniversityIfMissing(universityName, state, city, pinCode, address) {
+  const nameTrim = universityName.trim();
+  let parentUniv = await University.findOne({ name: nameTrim });
+  if (parentUniv) return parentUniv;
+
+  const slug = nameTrim
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "") || "university";
+  let candidateEmail = `${slug}@autocreated.university.local`;
+  let idx = 1;
+  while (await University.findOne({ email: candidateEmail })) {
+    idx += 1;
+    candidateEmail = `${slug}.${idx}@autocreated.university.local`;
+  }
+
+  const tempPasswordHash = await bcrypt.hash(`auto-university-${Date.now()}-${Math.random()}`, 10);
+  parentUniv = await University.create({
+    name: nameTrim,
+    address: {
+      state: state.trim(),
+      city: city.trim(),
+      pincode: pinCode.trim(),
+      fullAddress: address.trim(),
+    },
+    email: candidateEmail,
+    password: tempPasswordHash,
+    verified: true,
+    colleges: [],
+  });
+  return parentUniv;
+}
+
+/* ─── Password validation (relaxed) ────────────────────────────────────── */
+// The UI requests "no password conditions", so we accept any non-empty password.
+function validatePassword(_password) {
   return null;
 }
 
@@ -175,10 +207,8 @@ exports.registerCollege = async (req, res) => {
       return res.status(400).json({ success: false, message: "This email is already registered." });
     }
 
-    const parentUniv = await University.findOne({ name: universityName.trim() });
-    if (!parentUniv) {
-      return res.status(404).json({ success: false, message: "Parent University not found." });
-    }
+    // Parent university no longer needs to pre-exist. Create a placeholder university if missing.
+    const parentUniv = await createUniversityIfMissing(universityName, state, city, pinCode, address);
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const doc = await College.create({
@@ -216,7 +246,11 @@ exports.registerSociety = async (req, res) => {
   try {
     const { societyName, state, city, pinCode, address, collegeName, logoUrl, email, password, confirmPassword } = req.body;
 
-    if (!societyName || !state || !city || !pinCode || !address || !collegeName || !email || !password || !confirmPassword) {
+    // Minimal payload (isolated society registration) expects:
+    // - societyName, collegeName, logoUrl (optional), email, password, confirmPassword
+    const isMinimal = !state && !city && !pinCode && !address;
+
+    if (!societyName || !collegeName || !email || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
     if (password !== confirmPassword) {
@@ -229,6 +263,75 @@ exports.registerSociety = async (req, res) => {
     const existing = await Society.findOne({ email: emailNorm });
     if (existing) {
       return res.status(400).json({ success: false, message: "This email is already registered." });
+    }
+
+    // Isolated registration: store in SocietyRegistration (no parent College lookup required).
+    if (isMinimal) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const doc = await SocietyRegistration.create({
+        societyName: societyName.trim(),
+        collegeName: collegeName.trim(),
+        logoUrl: logoUrl || "",
+        email: emailNorm,
+        password: hashedPassword,
+        verified: true,
+      });
+
+      // Auto-create per-society signup config so this faculty email can sign up later.
+      const ADMIN_DEPARTMENT = "ADMIN"; // Faculty Incharge
+      try {
+        let cfg = await SocietySignupConfig.findOne({ societyRegistrationId: doc._id });
+        if (!cfg) {
+          cfg = await SocietySignupConfig.create({
+            societyRegistrationId: doc._id,
+            societyName: doc.societyName,
+            collegeName: doc.collegeName,
+            departments: [
+              {
+                department: ADMIN_DEPARTMENT,
+                allowedEmails: [emailNorm],
+                allowedIds: [],
+                faultyIds: [],
+              },
+            ],
+          });
+        } else {
+          let deptEntry = (cfg.departments || []).find(
+            (d) => (d.department || "").trim() === ADMIN_DEPARTMENT
+          );
+          if (!deptEntry) {
+            cfg.departments.push({
+              department: ADMIN_DEPARTMENT,
+              allowedEmails: [emailNorm],
+              allowedIds: [],
+              faultyIds: [],
+            });
+          } else if (!deptEntry.allowedEmails.includes(emailNorm)) {
+            deptEntry.allowedEmails.push(emailNorm);
+          }
+          await cfg.save();
+        }
+
+        // Also keep global SignupConfig in sync (so existing tooling still works).
+        await SignupConfig.findOneAndUpdate(
+          { department: ADMIN_DEPARTMENT },
+          { $addToSet: { allowedEmails: emailNorm } },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.error("registerSociety: failed to sync SocietySignupConfig/SignupConfig:", e);
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: "Society registered successfully. Your application is under review.",
+        data: { id: doc._id, societyName: doc.societyName, email: doc.email },
+      });
+    }
+
+    // Full registration path: requires address and an existing College document.
+    if (!state || !city || !pinCode || !address) {
+      return res.status(400).json({ success: false, message: "All fields are required." });
     }
 
     const parentCollege = await College.findOne({ name: collegeName.trim() });

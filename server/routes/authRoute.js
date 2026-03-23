@@ -18,6 +18,9 @@ const {
   getAllPeople,
   sendSignupInvite,
   deleteAccount,
+  resolveFacultyByEmail,
+  verifySignupOTP,
+  getFacultyContext,
 } = require("../controllers/authController");
 const {
   getAllSignupConfigs,
@@ -46,6 +49,11 @@ router.delete("/account", auth, deleteAccount);
 router.get("/enrich-profile", auth, enrichProfile);
 router.put("/profile", auth, updateProfile);
 router.post("/profile/avatar", auth, updateAvatar);
+
+// Faculty signup helpers (used by the "Sign up - Faculty" UI).
+router.post("/faculty/resolve", resolveFacultyByEmail);
+router.post("/verify-otp", verifySignupOTP);
+router.get("/faculty/context", auth, getFacultyContext);
 
 router.get("/signup-config", auth, canAccessDashboard, getAllSignupConfigs);
 router.post("/signup-config/add", auth, canAccessDashboard, addEmail);

@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
       enum: [
         "ADMIN",
+        "CollegeAdmin",
+        "UniversityAdmin",
         "Chairperson",
         "Vice-Chairperson",
         "Social Media and Promotion",
