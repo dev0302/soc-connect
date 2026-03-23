@@ -10,6 +10,7 @@ import { SaxGalleryLinear } from "@meysam213/iconsax-react";
 import ProfileDropDown from "./ProfileDropDown";
 import Search from "../Search";
 import { isSocietyRole } from "../../services/api";
+import { LayoutDashboard, Users, Settings, BookOpen, FileText, Library } from "lucide-react";
 
 /* ── Obsidian Silk Navbar ────────────────────────────────────────────────── */
 
@@ -26,20 +27,44 @@ function Navbar() {
     }`;
 
   const mobileNavLinkClass = ({ isActive }) =>
-    `text-2xl font-semibold transition-colors duration-200 ${
-      isActive ? "text-white" : "text-[#a0a0a0] hover:text-white"
-    }`;
+    `text-2xl font-semibold transition-colors duration-200 ${isActive ? "text-white" : "text-[#a0a0a0] hover:text-white"}`;
 
-  const navLinks = [
-    { to: "/", label: "Home", icon: <SaxHome2Linear className="w-4 h-4" />, exact: true },
-    { to: "/about", label: "About", icon: <SaxInfoCircleLinear className="w-4 h-4" /> },
-    ...(user ? [
-      { to: "/team", label: "Team", icon: <SaxProfile2UserLinear className="w-4 h-4" /> },
-      { to: "/events", label: "Events", icon: <SaxCalendarTickTwotone className="w-4 h-4" /> },
-      { to: "/gallery", label: "Gallery", icon: <SaxGalleryLinear className="w-4 h-4" /> },
-    ] : []),
-    { to: "/contact", label: "Contact", icon: <SaxUserTwotone className="w-4 h-4" /> },
-  ];
+  const path = location.pathname;
+  let navLinks = [];
+
+  if (path.startsWith("/faculty-dashboard")) {
+    navLinks = [
+      { to: "/faculty-dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" />, exact: true },
+      { to: "/faculty-dashboard/society", label: "Society Details", icon: <FileText className="w-4 h-4" /> },
+      { to: "/faculty-dashboard/members", label: "Members", icon: <Users className="w-4 h-4" /> },
+      { to: "/faculty-dashboard/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
+    ];
+  } else if (path.startsWith("/university-admin")) {
+    navLinks = [
+      { to: "/university-admin", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" />, exact: true },
+      { to: "/university-admin/colleges", label: "Colleges", icon: <Library className="w-4 h-4" /> },
+      { to: "/university-admin/students", label: "Students", icon: <Users className="w-4 h-4" /> },
+      { to: "/university-admin/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
+    ];
+  } else if (path.startsWith("/college-admin")) {
+    navLinks = [
+      { to: "/college-admin", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" />, exact: true },
+      { to: "/college-admin/societies", label: "Societies", icon: <BookOpen className="w-4 h-4" /> },
+      { to: "/college-admin/students", label: "Students", icon: <Users className="w-4 h-4" /> },
+      { to: "/college-admin/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
+    ];
+  } else {
+    navLinks = [
+      { to: "/", label: "Home", icon: <SaxHome2Linear className="w-4 h-4" />, exact: true },
+      { to: "/about", label: "About", icon: <SaxInfoCircleLinear className="w-4 h-4" /> },
+      ...(user ? [
+        { to: "/team", label: "Team", icon: <SaxProfile2UserLinear className="w-4 h-4" /> },
+        { to: "/events", label: "Events", icon: <SaxCalendarTickTwotone className="w-4 h-4" /> },
+        { to: "/gallery", label: "Gallery", icon: <SaxGalleryLinear className="w-4 h-4" /> },
+      ] : []),
+      { to: "/contact", label: "Contact", icon: <SaxUserTwotone className="w-4 h-4" /> },
+    ];
+  }
 
   return (
     <>

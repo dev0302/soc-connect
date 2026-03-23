@@ -315,9 +315,9 @@ export default function UniversityAdminDashboard() {
         <div className="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-indigo-500/[0.05] blur-[120px]" />
       </div>
 
-      <DashboardNav adminName={college.adminName} />
+      {/* Navbar handled by main App Navbar */}
 
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         {/* Page title */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
