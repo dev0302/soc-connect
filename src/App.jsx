@@ -34,6 +34,7 @@ import JamTheWeb from "./pages/JamTheWeb"
 import ManageTeam from "./pages/ManageTeam"
 import ManageSociety from "./pages/ManageSociety"
 import UniversityAdminDashboard from "./pages/UniversityAdminDashboard"
+import UniversityLevelAdminDashboard from "./pages/UniversityLevelAdminDashboard"
 import JoinTeamByLink from "./pages/JoinTeamByLink"
 import AuthAwareLayout from "./components/AuthAwareLayout"
 import Register from "./pages/Register"
@@ -104,7 +105,8 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/manage-team" element={<ManageTeam />} />
                 <Route path="/manage-society" element={<ManageSociety />} />
-                <Route path="/university-admin" element={<UniversityAdminDashboard />} />
+                <Route path="/college-admin" element={<UniversityAdminDashboard />} />
+                <Route path="/university-admin" element={<UniversityLevelAdminDashboard />} />
                 <Route path="/join-team/:token" element={<JoinTeamByLink />} />
                 <Route path="/notfound" element={<NotFound></NotFound>} />
                 <Route path="/contact" element={<Contact />} />
