@@ -1,7 +1,7 @@
 const RegistrationOTP = require("../models/RegistrationOTP");
-const UniversityRegistration = require("../models/UniversityRegistration");
-const CollegeRegistration = require("../models/CollegeRegistration");
-const SocietyRegistration = require("../models/SocietyRegistration");
+const University = require("../models/University");
+const College = require("../models/College");
+const Society = require("../models/Society");
 const mailSender = require("../utils/mailSender");
 const { registrationOtpTemplate } = require("../mail/templates");
 const { imageUpload } = require("../config/cloudinary");
@@ -35,9 +35,9 @@ exports.sendRegistrationOTP = async (req, res) => {
 
     // Check if already registered
     let existingDoc;
-    if (role === "university") existingDoc = await UniversityRegistration.findOne({ email: emailNorm });
-    else if (role === "college") existingDoc = await CollegeRegistration.findOne({ email: emailNorm });
-    else if (role === "society") existingDoc = await SocietyRegistration.findOne({ email: emailNorm });
+    if (role === "university") existingDoc = await University.findOne({ email: emailNorm });
+    else if (role === "college") existingDoc = await College.findOne({ email: emailNorm });
+    else if (role === "society") existingDoc = await Society.findOne({ email: emailNorm });
 
     if (existingDoc) {
       return res.status(400).json({ success: false, message: "This email is already registered." });
@@ -122,28 +122,31 @@ exports.registerUniversity = async (req, res) => {
     if (pwErr) return res.status(400).json({ success: false, message: pwErr });
 
     const emailNorm = email.trim().toLowerCase();
-    const existing = await UniversityRegistration.findOne({ email: emailNorm });
+    const existing = await University.findOne({ email: emailNorm });
     if (existing) {
       return res.status(400).json({ success: false, message: "This email is already registered." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const doc = await UniversityRegistration.create({
-      universityName: universityName.trim(),
-      state: state.trim(),
-      city: city.trim(),
-      pinCode: pinCode.trim(),
-      address: address.trim(),
+    const doc = await University.create({
+      name: universityName.trim(),
+      address: {
+        state: state.trim(),
+        city: city.trim(),
+        pincode: pinCode.trim(),
+        fullAddress: address.trim(),
+      },
       logoUrl: logoUrl || "",
       email: emailNorm,
       password: hashedPassword,
       verified: true,
+      colleges: [],
     });
 
     return res.status(201).json({
       success: true,
       message: "University registered successfully. Your application is under review.",
-      data: { id: doc._id, universityName: doc.universityName, email: doc.email },
+      data: { id: doc._id, name: doc.name, email: doc.email },
     });
   } catch (error) {
     console.error("registerUniversity error:", error);
@@ -166,29 +169,40 @@ exports.registerCollege = async (req, res) => {
     if (pwErr) return res.status(400).json({ success: false, message: pwErr });
 
     const emailNorm = email.trim().toLowerCase();
-    const existing = await CollegeRegistration.findOne({ email: emailNorm });
+    const existing = await College.findOne({ email: emailNorm });
     if (existing) {
       return res.status(400).json({ success: false, message: "This email is already registered." });
     }
 
+    const parentUniv = await University.findOne({ name: universityName.trim() });
+    if (!parentUniv) {
+      return res.status(404).json({ success: false, message: "Parent University not found." });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const doc = await CollegeRegistration.create({
-      collegeName: collegeName.trim(),
-      state: state.trim(),
-      city: city.trim(),
-      pinCode: pinCode.trim(),
-      address: address.trim(),
+    const doc = await College.create({
+      name: collegeName.trim(),
+      address: {
+        state: state.trim(),
+        city: city.trim(),
+        pincode: pinCode.trim(),
+        fullAddress: address.trim(),
+      },
       logoUrl: logoUrl || "",
-      universityName: universityName.trim(),
+      university: parentUniv._id,
       email: emailNorm,
       password: hashedPassword,
       verified: true,
+      societies: [],
     });
+
+    parentUniv.colleges.push({ collegeId: doc._id, collegeName: doc.name });
+    await parentUniv.save();
 
     return res.status(201).json({
       success: true,
       message: "College registered successfully. Your application is under review.",
-      data: { id: doc._id, collegeName: doc.collegeName, email: doc.email },
+      data: { id: doc._id, name: doc.name, email: doc.email },
     });
   } catch (error) {
     console.error("registerCollege error:", error);
@@ -199,9 +213,9 @@ exports.registerCollege = async (req, res) => {
 /* ─── Register Society ───────────────────────────────────────────────────── */
 exports.registerSociety = async (req, res) => {
   try {
-    const { societyName, collegeName, logoUrl, email, password, confirmPassword } = req.body;
+    const { societyName, state, city, pinCode, address, collegeName, logoUrl, email, password, confirmPassword } = req.body;
 
-    if (!societyName || !collegeName || !email || !password || !confirmPassword) {
+    if (!societyName || !state || !city || !pinCode || !address || !collegeName || !email || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
     if (password !== confirmPassword) {
@@ -211,25 +225,39 @@ exports.registerSociety = async (req, res) => {
     if (pwErr) return res.status(400).json({ success: false, message: pwErr });
 
     const emailNorm = email.trim().toLowerCase();
-    const existing = await SocietyRegistration.findOne({ email: emailNorm });
+    const existing = await Society.findOne({ email: emailNorm });
     if (existing) {
       return res.status(400).json({ success: false, message: "This email is already registered." });
     }
 
+    const parentCollege = await College.findOne({ name: collegeName.trim() });
+    if (!parentCollege) {
+      return res.status(404).json({ success: false, message: "Parent College not found." });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const doc = await SocietyRegistration.create({
-      societyName: societyName.trim(),
-      collegeName: collegeName.trim(),
+    const doc = await Society.create({
+      name: societyName.trim(),
+      address: {
+        state: state.trim(),
+        city: city.trim(),
+        pincode: pinCode.trim(),
+        fullAddress: address.trim(),
+      },
       logoUrl: logoUrl || "",
+      college: parentCollege._id,
       email: emailNorm,
       password: hashedPassword,
       verified: true,
     });
 
+    parentCollege.societies.push({ societyId: doc._id, societyName: doc.name });
+    await parentCollege.save();
+
     return res.status(201).json({
       success: true,
       message: "Society registered successfully. Your application is under review.",
-      data: { id: doc._id, societyName: doc.societyName, email: doc.email },
+      data: { id: doc._id, name: doc.name, email: doc.email },
     });
   } catch (error) {
     console.error("registerSociety error:", error);
