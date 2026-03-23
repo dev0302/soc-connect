@@ -243,7 +243,7 @@ const About = () => {
             <div className="absolute top-0 left-16 right-16 h-px"
               style={{ background: "linear-gradient(90deg, transparent, rgba(165,180,252,0.3), transparent)" }} />
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ letterSpacing: "-0.02em" }}>
-              Ready to run your society better?
+              Ready to run your society better??
             </h2>
             <p className="text-base mb-8" style={{ color: T.textSubtle }}>
               Get started in minutes — no setup fees, no lock-ins.
