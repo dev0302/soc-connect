@@ -39,6 +39,9 @@ import FacultyDashboard from "./pages/FacultyDashboard"
 import JoinTeamByLink from "./pages/JoinTeamByLink"
 import AuthAwareLayout from "./components/AuthAwareLayout"
 import Register from "./pages/Register"
+import InterviewSetup from "./pages/InterviewSetup"
+import InterviewDashboard from "./pages/InterviewDashboard"
+import MyInterview from "./pages/MyInterview"
 import { AnimatePresence, motion } from "framer-motion"
 
 function App() {
@@ -119,6 +122,9 @@ function App() {
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/quiz/result" element={<QuizResult />} />
                 <Route path="/jam-the-web" element={<JamTheWeb />} />
+                <Route path="/interview-setup" element={<InterviewSetup />} />
+                <Route path="/interview-dashboard" element={<InterviewDashboard />} />
+                <Route path="/my-interview" element={<MyInterview />} />
               {/* </Route> */}
             </Routes>
           </motion.main>

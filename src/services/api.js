@@ -807,4 +807,64 @@ export async function submitJamTheWebScores(teams) {
   return data;
 }
 
+// ── Interview Management ──────────────────────────────────────────────────
 
+/** Create a new interview. Body: { title, date, startTime, endTime, slotDuration, panels } */
+export async function createInterview(payload) {
+  const res = await authFetch('/api/v1/interviews', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to create interview');
+  return data;
+}
+
+/** Generate time slots for an interview. Body: { interviewId } */
+export async function generateInterviewSlots(interviewId) {
+  const res = await authFetch('/api/v1/interviews/generate-slots', {
+    method: 'POST',
+    body: JSON.stringify({ interviewId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to generate slots');
+  return data;
+}
+
+/** Auto-assign candidates to available slots (FIFO). Body: { interviewId, candidateIds } */
+export async function assignInterviewCandidates(interviewId, candidateIds) {
+  const res = await authFetch('/api/v1/interviews/assign', {
+    method: 'POST',
+    body: JSON.stringify({ interviewId, candidateIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to assign candidates');
+  return data;
+}
+
+/** Update a slot's status. Body: { interviewId, slotIndex, status } */
+export async function updateInterviewSlotStatus(interviewId, slotIndex, status) {
+  const res = await authFetch('/api/v1/interviews/status', {
+    method: 'PATCH',
+    body: JSON.stringify({ interviewId, slotIndex, status }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to update status');
+  return data;
+}
+
+/** Get interviews assigned to a specific student. */
+export async function getStudentInterview(userId) {
+  const res = await authFetch(`/api/v1/interviews/student/${encodeURIComponent(userId)}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch interview');
+  return data;
+}
+
+/** Get all interviews (admin). */
+export async function getInterviews() {
+  const res = await authFetch('/api/v1/interviews');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch interviews');
+  return data;
+}

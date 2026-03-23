@@ -10,7 +10,7 @@ import { SaxGalleryLinear } from "@meysam213/iconsax-react";
 import ProfileDropDown from "./ProfileDropDown";
 import Search from "../Search";
 import { isSocietyRole } from "../../services/api";
-import { LayoutDashboard, Users, Settings, BookOpen, FileText, Library } from "lucide-react";
+import { LayoutDashboard, Users, Settings, BookOpen, FileText, Library, ClipboardList } from "lucide-react";
 
 /* ── Obsidian Silk Navbar ────────────────────────────────────────────────── */
 
@@ -61,6 +61,9 @@ function Navbar() {
         { to: "/team", label: "Team", icon: <SaxProfile2UserLinear className="w-4 h-4" /> },
         { to: "/events", label: "Events", icon: <SaxCalendarTickTwotone className="w-4 h-4" /> },
         { to: "/gallery", label: "Gallery", icon: <SaxGalleryLinear className="w-4 h-4" /> },
+      ] : []),
+      ...(user ? [
+        { to: "/my-interview", label: "Interviews", icon: <ClipboardList className="w-4 h-4" /> },
       ] : []),
       { to: "/contact", label: "Contact", icon: <SaxUserTwotone className="w-4 h-4" /> },
     ];
