@@ -238,3 +238,26 @@ export async function searchIndianUniversities(query) {
     return [];
   }
 }
+
+export async function searchDatabaseSocieties(query) {
+  try {
+    const q = String(query || "");
+    const url = `${BASE}/api/v1/register/search/database-societies`;
+    const records = await requestArray(url);
+    const qq = q.trim().toLowerCase();
+    if (!qq) return records;
+    return records.filter((s) => String(s).toLowerCase().includes(qq));
+  } catch {
+    return [];
+  }
+}
+
+export async function searchDatabaseDepartments(societyName) {
+  try {
+    if (!societyName) return [];
+    const url = `${BASE}/api/v1/register/search/database-departments?societyName=${encodeURIComponent(societyName)}`;
+    return await requestArray(url);
+  } catch {
+    return [];
+  }
+}

@@ -26,7 +26,7 @@ exports.sendRegistrationOTP = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email and role are required." });
     }
 
-    const validRoles = ["university", "college", "society"];
+    const validRoles = ["university", "college", "society", "faculty", "core", "head", "executive"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role." });
     }
@@ -35,6 +35,7 @@ exports.sendRegistrationOTP = async (req, res) => {
 
     // Check if already registered
     let existingDoc;
+    // We only restrict duplicate emails for the high-level tier entities in this generic OTP route.
     if (role === "university") existingDoc = await University.findOne({ email: emailNorm });
     else if (role === "college") existingDoc = await College.findOne({ email: emailNorm });
     else if (role === "society") existingDoc = await Society.findOne({ email: emailNorm });
@@ -262,5 +263,39 @@ exports.registerSociety = async (req, res) => {
   } catch (error) {
     console.error("registerSociety error:", error);
     return res.status(500).json({ success: false, message: error.message || "Registration failed." });
+  }
+};
+
+/* ─── Search Societies & Departments ─────────────────────────────────────── */
+exports.getAllSocieties = async (req, res) => {
+  try {
+    const societies = await Society.find({}, "name logoUrl");
+    return res.status(200).json({ success: true, records: societies.map(s => s.name) });
+  } catch (error) {
+    console.error("getAllSocieties error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch societies." });
+  }
+};
+
+exports.getDepartmentsBySociety = async (req, res) => {
+  try {
+    const { societyName } = req.query;
+    if (!societyName) return res.status(400).json({ success: false, message: "Society name is required." });
+    
+    // Mocking department fetch for the given society since custom departments aren't fully modelled yet.
+    // In complete implementation, this would query a Departments collection connected via Society ID.
+    const mockDepartments = [
+      "Technical",
+      "Event Management",
+      "Public Relation and Outreach",
+      "Design",
+      "Content and Documentation",
+      "Photography and Videography",
+      "Sponsorship and Marketing",
+    ];
+    return res.status(200).json({ success: true, records: mockDepartments });
+  } catch (error) {
+    console.error("getDepartments error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch departments." });
   }
 };

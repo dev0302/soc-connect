@@ -6,6 +6,8 @@ const {
   registerUniversity,
   registerCollege,
   registerSociety,
+  getAllSocieties,
+  getDepartmentsBySociety,
 } = require("../controllers/registrationController");
 
 const {
@@ -30,5 +32,9 @@ router.post("/society", registerSociety);
 // Search endpoints (proxy for api.data.gov.in so the browser avoids CORS).
 router.get("/search/universities", searchIndianUniversities);
 router.get("/search/colleges", searchIndianColleges);
+
+// Search inside our Custom Database
+router.get("/search/database-societies", getAllSocieties);
+router.get("/search/database-departments", getDepartmentsBySociety);
 
 module.exports = router;
