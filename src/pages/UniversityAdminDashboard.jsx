@@ -23,6 +23,7 @@ import {
   Link2,
   School,
   Landmark,
+  ExternalLink,
 } from "lucide-react";
 
 /* ─── Sample Data ─────────────────────────────────────────────────────── */
@@ -35,6 +36,7 @@ const INITIAL_COLLEGE = {
 };
 
 const INITIAL_SOCIETIES = [
+  { id: "gfg-connect", name: "GFG", facultyName: "Dr. Arvind Singh", facultyEmail: "gfg@bvcoe.ac.in", link: "https://bpit-generic-soc.vercel.app/" },
   { id: 1, name: "Robotics Club", facultyName: "Dr. Meena Sharma", facultyEmail: "meena.sharma@bvcoe.ac.in" },
   { id: 2, name: "Literary Society", facultyName: "Prof. Anil Verma", facultyEmail: "anil.verma@bvcoe.ac.in" },
   { id: 3, name: "Coding Club", facultyName: "Dr. Priya Patel", facultyEmail: "priya.patel@bvcoe.ac.in" },
@@ -457,14 +459,21 @@ export default function UniversityAdminDashboard() {
                     key={s.id}
                     variants={fadeUp}
                     whileHover={{ scale: 1.015, boxShadow: "0 8px 36px rgba(0,0,0,0.32)" }}
-                    className="rounded-2xl border border-white/[0.07] bg-gradient-to-br from-[#1e1e2f]/80 to-[#27253a]/80 overflow-hidden group cursor-default"
+                    className={`rounded-2xl border border-white/[0.07] bg-gradient-to-br from-[#1e1e2f]/80 to-[#27253a]/80 overflow-hidden group ${s.link ? "cursor-pointer ring-1 ring-cyan-500/0 hover:ring-cyan-500/50" : "cursor-default"}`}
                     style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.18)" }}
+                    onClick={() => {
+                      if (s.link) window.open(s.link, "_blank", "noopener,noreferrer");
+                    }}
+                    title={s.link ? "Open Society Page" : undefined}
                   >
                     {/* Accent bar */}
                     <div className="h-1 bg-gradient-to-r from-cyan-500/70 via-indigo-500/70 to-purple-500/70 opacity-60 group-hover:opacity-100 transition-opacity" />
 
                     <div className="p-5">
-                      <h3 className="text-base font-semibold text-white mb-3 truncate">{s.name}</h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base font-semibold text-white truncate">{s.name}</h3>
+                        {s.link && <ExternalLink className="h-4 w-4 text-cyan-400 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />}
+                      </div>
 
                       <div className="space-y-2 mb-5">
                         <div className="flex items-center gap-2 text-sm">
@@ -481,21 +490,30 @@ export default function UniversityAdminDashboard() {
                       <div className="flex items-center gap-2 pt-3 border-t border-white/[0.06]">
                         <button
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-cyan-400 bg-cyan-500/[0.08] hover:bg-cyan-500/[0.15] transition-colors"
-                          onClick={() => toast.info(`Viewing "${s.name}"`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info(`Viewing "${s.name}"`);
+                          }}
                         >
                           <Eye className="h-3.5 w-3.5" />
                           View
                         </button>
                         <button
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-amber-400 bg-amber-500/[0.08] hover:bg-amber-500/[0.15] transition-colors"
-                          onClick={() => toast.info(`Editing "${s.name}"`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info(`Editing "${s.name}"`);
+                          }}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </button>
                         <button
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-red-400 bg-red-500/[0.08] hover:bg-red-500/[0.15] transition-colors"
-                          onClick={() => handleDeleteSociety(s.id, s.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSociety(s.id, s.name);
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
