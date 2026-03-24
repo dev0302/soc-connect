@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -25,6 +25,7 @@ import {
   Landmark,
   ExternalLink,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 /* ─── Sample Data ─────────────────────────────────────────────────────── */
 const INITIAL_COLLEGE = {
@@ -238,7 +239,18 @@ function DashboardNav({ adminName }) {
    MAIN PAGE
    ═════════════════════════════════════════════════════════════════════ */
 export default function UniversityAdminDashboard() {
-  const [college] = useState(INITIAL_COLLEGE);
+  const { user } = useAuth();
+  const college = useMemo(() => {
+    const ctx = user?.collegeContext || {};
+    const adminNameFromUser = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
+    return {
+      collegeName: ctx.collegeName || INITIAL_COLLEGE.collegeName,
+      universityName: ctx.universityName || INITIAL_COLLEGE.universityName,
+      location: ctx.location || INITIAL_COLLEGE.location,
+      adminName: ctx.adminName || adminNameFromUser || INITIAL_COLLEGE.adminName,
+      adminEmail: ctx.adminEmail || user?.email || INITIAL_COLLEGE.adminEmail,
+    };
+  }, [user]);
   const [societies, setSocieties] = useState(INITIAL_SOCIETIES);
 
   // Create society form

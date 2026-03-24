@@ -81,6 +81,24 @@ async function getPreferredDashboardByEmail(emailNorm, accountType) {
   return "/";
 }
 
+async function getCollegeContextByEmail(emailNorm, userLike) {
+  const college = await College.findOne({ email: emailNorm })
+    .populate("university", "name")
+    .lean()
+    .catch(() => null);
+  if (!college) return null;
+
+  const addr = college.address || {};
+  const location = [addr.city, addr.state, addr.pincode].filter(Boolean).join(", ");
+  return {
+    collegeName: college.name || "",
+    universityName: college.university?.name || "",
+    location: location || "",
+    adminName: [userLike?.firstName, userLike?.lastName].filter(Boolean).join(" ").trim() || "College Admin",
+    adminEmail: emailNorm,
+  };
+}
+
 /** Find PredefinedProfile by email (case-insensitive) so stored casing never causes "not found". */
 function findPredefinedByEmail(email) {
   const trimmed = (email || "").trim();
@@ -575,6 +593,8 @@ exports.login = async (req, res) => {
     user.canManageEvents = eventUploadAllowed.includes(user.accountType);
     const facultyContext = await getFacultyContextByEmail(emailNorm);
     if (facultyContext) user.facultyContext = facultyContext;
+    const collegeContext = await getCollegeContextByEmail(emailNorm, user);
+    if (collegeContext) user.collegeContext = collegeContext;
     user.preferredDashboard = await getPreferredDashboardByEmail(emailNorm, user.accountType);
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -777,6 +797,8 @@ exports.me = async (req, res) => {
     user.canManageEvents = eventUploadAllowed.includes(user.accountType);
     const facultyContext = await getFacultyContextByEmail((user.email || "").trim().toLowerCase());
     if (facultyContext) user.facultyContext = facultyContext;
+    const collegeContext = await getCollegeContextByEmail((user.email || "").trim().toLowerCase(), user);
+    if (collegeContext) user.collegeContext = collegeContext;
     user.preferredDashboard = await getPreferredDashboardByEmail((user.email || "").trim().toLowerCase(), user.accountType);
     return res.status(200).json({ success: true, user });
   } catch (error) {
