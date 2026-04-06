@@ -37,7 +37,7 @@ const INITIAL_COLLEGE = {
 };
 
 const INITIAL_SOCIETIES = [
-  { id: "gfg-connect", name: "GFG", facultyName: "Dr. Arvind Singh", facultyEmail: "gfg@bvcoe.ac.in", link: "https://bpit-generic-soc.vercel.app/" },
+  { id: "gfg-connect", name: "GFG", facultyName: "Dr. Arvind Singh", facultyEmail: "gfg@bvcoe.ac.in", link: "http://localhost:5174/" },
   { id: 1, name: "Robotics Club", facultyName: "Dr. Meena Sharma", facultyEmail: "meena.sharma@bvcoe.ac.in" },
   { id: 2, name: "Literary Society", facultyName: "Prof. Anil Verma", facultyEmail: "anil.verma@bvcoe.ac.in" },
   { id: 3, name: "Coding Club", facultyName: "Dr. Priya Patel", facultyEmail: "priya.patel@bvcoe.ac.in" },
